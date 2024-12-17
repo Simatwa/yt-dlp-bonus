@@ -1,10 +1,9 @@
 """Non-changing variables across the package"""
 
-from enum import Enum
 import typing as t
 
 
-class VideoExtensions(Enum):
+class VideoExtensions:
     """Video's extension i.e mp4 & webm"""
 
     mp4 = "mp4"

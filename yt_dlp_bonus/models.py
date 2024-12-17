@@ -19,7 +19,7 @@ class ExtractedInfoFormat(BaseModel):
     protocol: str
     acodec: str
     vcodec: str
-    urL: Optional[HttpUrl] = None
+    url: Optional[HttpUrl] = None
     width: Optional[int] = None
     height: Optional[int] = None
     fps: Optional[float] = None
