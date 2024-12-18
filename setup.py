@@ -23,7 +23,7 @@ setup(
         "console_scripts": [],
     },
     install_requires=[
-        "requests[socks]>=2.32.3",
+        "cloudscraper>=1.2.71",
         "yt-dlp>=2024.12.13",
     ],
     python_requires=">=3.10",
