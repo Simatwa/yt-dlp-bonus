@@ -2,7 +2,11 @@
 
 from typing import Sequence, Any
 import subprocess
+import logging
 from subprocess import CompletedProcess
+
+logger = logging.getLogger(__file__)
+"""yt-dlp-bonus logger"""
 
 
 def assert_instance(obj, inst, name="Value"):

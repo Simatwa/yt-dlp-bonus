@@ -6,7 +6,6 @@ import typing as t
 from uuid import uuid4
 from pathlib import Path
 from yt_dlp import YoutubeDL
-from yt_dlp_bonus import logger
 from yt_dlp_bonus.models import ExtractedInfo, VideoFormats, ExtractedInfoFormat
 from yt_dlp_bonus.constants import (
     VideoExtensions,
@@ -19,6 +18,7 @@ from yt_dlp_bonus.constants import (
     audioBitratesType,
 )
 from yt_dlp_bonus.utils import (
+    logger,
     assert_instance,
     assert_type,
     assert_membership,
