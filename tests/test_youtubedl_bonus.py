@@ -29,3 +29,7 @@ def test_update_audio_video_size(audio_quality):
     mp4_quality_formats = yb.get_videos_quality_by_extension(extracted_data, "mp4")
     resp = yb.update_audio_video_size(mp4_quality_formats, audio_quality)
     assert type(resp) in (qualityExtractedInfoType, dict)
+    for quality, format in resp.items():
+        assert isinstance(format.filesize_approx, int)
+        assert isinstance(format.audio_video_size, int)
+        assert format.audio_video_size > format.filesize_approx

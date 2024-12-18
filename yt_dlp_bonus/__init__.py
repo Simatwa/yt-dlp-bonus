@@ -1,4 +1,5 @@
 from importlib import metadata
+import logging
 
 try:
     __version__ = metadata.version("yt-dlp-bonus")
@@ -7,3 +8,7 @@ except metadata.PackageNotFoundError:
 
 __author__ = "Smartwa"
 __repo__ = "https://github.com/Simatwa/yt-dlp-bonus"
+
+
+logger = logging(__file__)
+"""yt-dlp-bonus logger"""
