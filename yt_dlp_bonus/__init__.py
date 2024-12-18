@@ -10,5 +10,5 @@ __author__ = "Smartwa"
 __repo__ = "https://github.com/Simatwa/yt-dlp-bonus"
 
 
-logger = logging(__file__)
+logger = logging.getLogger(__file__)
 """yt-dlp-bonus logger"""
