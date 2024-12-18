@@ -160,6 +160,24 @@ class PostDownload:
         'ffmpeg -i "%(input)s" -b:a %(bitrate)s "%(output)s"'
     )
 
+    clear_temps: bool = False
+    """Flag for controlling delition of temporary files"""
+
+    @classmethod
+    def clear_temp_files(cls, *temp_files: Path | str):
+        """Remove temporary files.
+
+        Args:
+            temp_files t.Sequence[Path|str]: temporary files.
+        """
+        if not cls.clear_temps:
+            return
+        for temp_file in temp_files:
+            try:
+                os.remove(temp_file)
+            except Exception as e:
+                logger.exception(f"Failed to clear temp-file {temp_file}")
+
     @classmethod
     def merge_audio_and_video(
         cls, audio_path: Path, video_path: Path, output: Path | str
@@ -191,6 +209,7 @@ class PostDownload:
         is_successful, resp = run_system_command(command)
         if not is_successful:
             raise RuntimeError("Failed to merge audio and video clips") from resp
+        cls.clear_temp_files(audio_path, video_path)
         return Path(str(output))
 
     @classmethod
@@ -221,6 +240,7 @@ class PostDownload:
         is_successful, resp = run_system_command(command)
         if not is_successful:
             raise RuntimeError("Failed to convert audio to mp3") from resp
+        cls.clear_temp_files(input)
         return Path(str(output))
 
 
@@ -258,7 +278,7 @@ class Download(PostDownload):
         os.makedirs(self.temp_dir, exist_ok=True)
 
     def save_to(self, title: str, ext: str = "", is_temp: bool = False) -> Path:
-        """Get absolute path to save a file
+        """Get sanitized path to save a file
 
         Args:
             title (str): Video title.

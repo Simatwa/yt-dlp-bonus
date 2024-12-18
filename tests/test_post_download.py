@@ -11,7 +11,9 @@ mp4_file_path = curdir.joinpath("assets/blob/videoplayback.mp4")
 
 @pytest.fixture
 def pd():
-    return PostDownload()
+    ps = PostDownload()
+    ps.clear_temps = False
+    return ps
 
 
 @pytest.mark.parametrize(
