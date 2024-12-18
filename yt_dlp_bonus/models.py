@@ -59,18 +59,18 @@ class ExtractedInfoHeatmap(BaseModel):
 
 class ExtractedInfoRequestedFormats(ExtractedInfoFormat):
     asr: Any = None
-    filesize: int
+    filesize: Optional[int] = 0
     source_preference: int
     audio_channels: Any = None
     quality: int
     has_drm: bool
     language: Optional[str] = None
-    language_preference: int
+    language_preference: Optional[int] = None
     preference: Any = None
     ext: str
     dynamic_range: Optional[str] = None
-    container: str
-    downloader_options: dict[Any, Any]
+    container: Optional[str] = None
+    downloader_options: Optional[dict[Any, Any]] = None
 
 
 class ExtractedInfo(BaseModel):

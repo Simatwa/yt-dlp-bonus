@@ -25,6 +25,7 @@ from yt_dlp_bonus.utils import (
     get_size_in_mb_from_bytes,
     run_system_command,
 )
+from yt_dlp_bonus.exceptions import UserInputError
 
 from cloudscraper import create_scraper
 from yt_dlp.utils import sanitize_filename
@@ -419,7 +420,7 @@ class Download(PostDownload):
                 video_path=video_temp["saved_to"],
                 output=save_to,
             )
-        else:
+        elif quality in audioQualities:
             # Download the desired audio quality
             title = f"{title} {audio_bitrates}" if audio_bitrates else title
             save_to = self.save_to(
@@ -443,4 +444,8 @@ class Download(PostDownload):
                 # Retain in it's format
                 # Move the file from tempfile to woking directory
                 shutil.move(audio_temp["saved_to"], save_to)
+        else:
+            raise UserInputError(
+                f"The targeted format and the quality mismatched - {quality}"
+            )
         return save_to
