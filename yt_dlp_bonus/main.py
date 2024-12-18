@@ -36,6 +36,9 @@ class YoutubeDLBonus(YoutubeDL):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def __enter__(self) -> "YoutubeDLBonus":
+        return self
+
     def model_extracted_info(self, data: dict) -> ExtractedInfo:
         """Generate a model for the extracted video info.
 
@@ -165,6 +168,9 @@ class PostDownload:
         self.clear_temps: bool = clear_temps
         """Flag for controlling delition of temporary files"""
 
+    def __enter__(self) -> "PostDownload":
+        return self
+
     def clear_temp_files(self, *temp_files: Path | str):
         """Remove temporary files.
 
@@ -282,6 +288,9 @@ class Download(PostDownload):
         ), f"Working directory chosen is invalid - {self.working_directory}"
         self.temp_dir = self.working_directory.joinpath("temps")
         os.makedirs(self.temp_dir, exist_ok=True)
+
+    def __enter__(self) -> "Download":
+        return self
 
     def save_to(self, title: str, ext: str = "", is_temp: bool = False) -> Path:
         """Get sanitized path to save a file
