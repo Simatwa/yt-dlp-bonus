@@ -47,7 +47,7 @@ class YoutubeDLBonus(YoutubeDL):
         """
         return ExtractedInfo(**data)
 
-    def extract_info_and_model(self, url: str) -> ExtractedInfo:
+    def extract_info_and_form_model(self, url: str) -> ExtractedInfo:
         """Exract info for a particular url and model the response.
 
         Args:

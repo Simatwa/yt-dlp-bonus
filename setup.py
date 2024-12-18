@@ -34,7 +34,7 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     classifiers=[
-        "License :: OSI Approved :: The Unlicense",
+        "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Intended Audience :: Developers",
         "License :: Free For Home Use",
         "Programming Language :: Python",

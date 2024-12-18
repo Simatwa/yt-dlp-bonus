@@ -5,7 +5,7 @@ from yt_dlp_bonus.models import ExtractedInfo
 from tests import video_url, curdir
 
 yb = YoutubeDLBonus(params=dict(cookiefile=curdir.joinpath("cookies.txt")))
-extracted_info = yb.extract_info_and_model(video_url)
+extracted_info = yb.extract_info_and_form_model(video_url)
 
 
 @pytest.fixture
