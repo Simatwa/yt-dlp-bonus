@@ -33,9 +33,10 @@ class ExtractedInfoFormat(BaseModel):
     tbr: Optional[Any] = None  # To be checked
     resolution: str
     aspect_ratio: Optional[float] = None
-    filesize_approx: Optional[Any] = None
+    filesize_approx: Optional[int] = None
     http_headers: dict[str, str]
     format: str
+    audio_video_size: Optional[int] = 0
 
 
 class ExtractedInfoThumbnail(BaseModel):

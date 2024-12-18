@@ -10,7 +10,7 @@ class VideoExtensions:
     webm = "webm"
 
 
-videoQualities = t.Literal[
+videoQualities = (
     "144p",
     "240p",
     "360p",
@@ -23,17 +23,46 @@ videoQualities = t.Literal[
     "1080p50",
     "1440p50",
     "2160p50",
-]
+    "720p60",
+    "1080p60",
+    "1440p60",
+    "2160p60",
+)
 """Video qualities"""
 
-audioQualities = t.Literal[
+videoQualitiesType = t.Literal[
+    "144p",
+    "240p",
+    "360p",
+    "480p",
+    "720p",
+    "1080p",
+    "1440p",
+    "2160p",
+    "720p50",
+    "1080p50",
+    "1440p50",
+    "2160p50",
+    "720p60",
+    "1080p60",
+    "1440p60",
+    "2160p60",
+]
+
+audioQualitiesType = t.Literal[
     "ultralow",
     "low",
     "medium",
 ]
+
+audioQualities = (
+    "ultralow",
+    "low",
+    "medium",
+)
 """Audio qualities"""
 
-mediaQualities = t.Literal[
+mediaQualitiesType = t.Literal[
     "ultralow",
     "low",
     "medium",
@@ -49,5 +78,31 @@ mediaQualities = t.Literal[
     "1080p50",
     "1440p50",
     "2160p50",
+    "720p60",
+    "1080p60",
+    "1440p60",
+    "2160p60",
 ]
+
+mediaQualities = (
+    "ultralow",
+    "low",
+    "medium",
+    "144p",
+    "240p",
+    "360p",
+    "480p",
+    "720p",
+    "1080p",
+    "1440p",
+    "2160p",
+    "720p50",
+    "1080p50",
+    "1440p50",
+    "2160p50",
+    "720p60",
+    "1080p60",
+    "1440p60",
+    "2160p60",
+)
 """Both audio and video qualities"""

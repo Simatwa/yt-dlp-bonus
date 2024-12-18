@@ -2,9 +2,16 @@ from yt_dlp import YoutubeDL
 from yt_dlp_bonus.models import ExtractedInfo, VideoFormats, ExtractedInfoFormat
 from pathlib import Path
 import json
-from yt_dlp_bonus.constants import VideoExtensions, mediaQualities
-from yt_dlp_bonus.utils import assert_instance
+from yt_dlp_bonus.constants import (
+    VideoExtensions,
+    audioQualities,
+    audioQualitiesType,
+    mediaQualitiesType,
+)
+from yt_dlp_bonus.utils import assert_instance, assert_type
 import typing as t
+
+qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
 
 
 class YoutubeDLBonus(YoutubeDL):
@@ -66,14 +73,20 @@ class YoutubeDLBonus(YoutubeDL):
 
         for format in extracted_info.formats:
             if format.ext == VideoExtensions.webm:
-                webm_videos.append(format)
+                if format.format_note in audioQualities:
+                    # Let's append audio to be accessible from both extensions
+                    webm_videos.append(format)
+                    mp4_videos.append(format)
+                else:
+                    webm_videos.append(format)
             elif format.ext == VideoExtensions.mp4:
                 mp4_videos.append(format)
+
         return VideoFormats(webm=webm_videos, mp4=mp4_videos)
 
     def get_videos_quality_by_extension(
         self, extracted_info: ExtractedInfo, ext: t.Literal["webm", "mp4"] = "mp4"
-    ) -> dict[mediaQualities, ExtractedInfoFormat]:
+    ) -> qualityExtractedInfoType:
         """Create a map of video qualities and their metadata.
 
         Args:
@@ -88,4 +101,33 @@ class YoutubeDLBonus(YoutubeDL):
         response_items = {}
         for format in formats:
             response_items[format.format_note] = format
-        return response_items
+        return t.cast(qualityExtractedInfoType, response_items)
+
+    def update_audio_video_size(
+        self,
+        quality_extracted_info: qualityExtractedInfoType,
+        audio_quality: audioQualitiesType = "medium",
+    ) -> qualityExtractedInfoType:
+        """Takes the targeted audio size and adds it with that of each video.
+        Updates the value to `filesize_approx` variable.
+
+        Args:
+            quality_extracted_info (qualityExtractedInfoType): Video qualities mapped to their ExtractedInfo.
+            audio_quality (audioQualities): Audio qaulity from `ultralow`, `low`, `medium`.
+
+        Returns:
+            qualityExtractedInfoType: Updated qualityExtractedInfoType.
+        """
+        assert_type(
+            quality_extracted_info,
+            (qualityExtractedInfoType, dict),
+            "quality_extracted_info",
+        )
+        assert_type(audio_quality, (audioQualitiesType, str), "audio_quality")
+        chosen_audio_format = quality_extracted_info[audio_quality]
+        for quality, format in quality_extracted_info.items():
+            format.audio_video_size = (
+                format.filesize_approx + chosen_audio_format.filesize_approx
+            )
+            quality_extracted_info[quality] = format
+        return t.cast(qualityExtractedInfoType, quality_extracted_info)
