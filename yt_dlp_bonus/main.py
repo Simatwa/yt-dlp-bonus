@@ -160,27 +160,28 @@ class PostDownload:
         'ffmpeg -i "%(input)s" -b:a %(bitrate)s "%(output)s"'
     )
 
-    clear_temps: bool = False
-    """Flag for controlling delition of temporary files"""
+    def __init__(self, clear_temps: bool = False):
+        self.clear_temps: bool = clear_temps
+        """Flag for controlling delition of temporary files"""
 
-    @classmethod
-    def clear_temp_files(cls, *temp_files: Path | str):
+    def clear_temp_files(self, *temp_files: Path | str):
         """Remove temporary files.
 
         Args:
             temp_files t.Sequence[Path|str]: temporary files.
         """
-        if not cls.clear_temps:
+        if not self.clear_temps:
+            logger.info(f"Ignoring temp-file clearance.")
             return
         for temp_file in temp_files:
+            logger.warning(f"Clearing temporary file - {temp_file}")
             try:
                 os.remove(temp_file)
             except Exception as e:
                 logger.exception(f"Failed to clear temp-file {temp_file}")
 
-    @classmethod
     def merge_audio_and_video(
-        cls, audio_path: Path, video_path: Path, output: Path | str
+        self, audio_path: Path, video_path: Path, output: Path | str
     ) -> Path:
         """Combines separate audio and video into one.
 
@@ -203,18 +204,20 @@ class PostDownload:
         assert not Path(
             str(output)
         ).is_dir(), f"Output path cannot be a directory - {output}"
-        command = cls.merge_audio_and_video_command_template % (
+        command = self.merge_audio_and_video_command_template % (
             dict(video_path=video_path, audio_path=audio_path, output=output)
+        )
+        logger.info(
+            f"Merging audio and video - ({audio_path}, {video_path}) - {output}"
         )
         is_successful, resp = run_system_command(command)
         if not is_successful:
             raise RuntimeError("Failed to merge audio and video clips") from resp
-        cls.clear_temp_files(audio_path, video_path)
+        self.clear_temp_files(audio_path, video_path)
         return Path(str(output))
 
-    @classmethod
     def convert_audio_to_mp3_format(
-        cls, input: Path, output: Path | str, bitrate: audioBitratesType = "128k"
+        self, input: Path, output: Path | str, bitrate: audioBitratesType = "128k"
     ) -> Path:
         """Converts `.webm` and `.m4a` audio formats to `.mp3`.
 
@@ -234,13 +237,14 @@ class PostDownload:
             str(output)
         ).is_dir(), f"Output path cannot be a directory - {output}"
         assert_membership(audioBitrates, bitrate)
-        command = cls.audio_to_mp3_conversion_command_template % dict(
+        command = self.audio_to_mp3_conversion_command_template % dict(
             input=input, bitrate=bitrate, output=output
         )
+        logger.info(f"Converting audio file to mp3 - ({input}, {output})")
         is_successful, resp = run_system_command(command)
         if not is_successful:
             raise RuntimeError("Failed to convert audio to mp3") from resp
-        cls.clear_temp_files(input)
+        self.clear_temp_files(input)
         return Path(str(output))
 
 
@@ -250,7 +254,7 @@ class Download(PostDownload):
     def __init__(
         self,
         working_directory: Path | str = os.getcwd(),
-        clear_temps: bool = True,
+        clear_temps: bool = False,
         file_prefix: str = "",
         audio_quality: audioQualitiesType = "medium",
         chunk_size: int = 1024,
@@ -265,6 +269,7 @@ class Download(PostDownload):
             audio_quality (str, audioQualitieType): One of ["ultralow", "low", "medium"]. Defaults to "medium".
             chunk_size (str, optional): Download stream chunk size. Defaults to 1024.
         """
+        super().__init__(clear_temps=clear_temps)
         self.working_directory = Path(working_directory)
         self.clear_temps = clear_temps
         self.file_prefix = file_prefix
@@ -291,7 +296,7 @@ class Download(PostDownload):
         sanitized_filename = sanitize_filename(self.file_prefix + title)
         parent = self.temp_dir if is_temp else self.working_directory
         extension = ext if ext.startswith(".") else ("." + ext)
-        return parent.joinpath(sanitized_filename, extension)
+        return parent.joinpath(sanitized_filename + extension)
 
     def _download_format(
         self,
@@ -340,7 +345,8 @@ class Download(PostDownload):
         quality_infoFormat: qualityExtractedInfoType,
         callback_functions: t.Sequence[t.Callable] = [],
         streaming_intervals: float = 0,
-        audio_bitrates: audioBitratesType = None,
+        audio_bitrates: audioBitratesType = "128k",
+        audio_only: bool = False,
     ) -> Path:
         """Download the media and save in disk.
 
@@ -354,27 +360,29 @@ class Download(PostDownload):
                 >>>
               ```
             streaming_intervals (float, optional): Time to wait before downloading nex chunk. Defaults to 0.
-            audio_bitrates (audioBitratesType, optional): Audio bitrates incase of audio download only. Defaults to "128k".
+            audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to download in m4a format. Defaults to "128k".
+            audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
 
         Returns:
               Path: Path to the complete downloadable file.
         """
         assert title, "Video title cannot be null"
-        assert_membership(quality, mediaQualities)
-        assert_instance(quality_infoFormat, (qualityExtractedInfoType, dict))
+        assert_membership(mediaQualities, quality)
+        assert_membership(audioBitrates + (None,), audio_bitrates)
+        assert_type(quality_infoFormat, (qualityExtractedInfoType, dict))
         assert (
             quality in quality_infoFormat
-        ), f"The video does not support the desired quality - {quality}"
+        ), f"The video does not support the targeted quality - {quality}"
         target_format = quality_infoFormat[quality]
         title = f"{title} {quality}"
-        if not quality in audioQualities:
+        if quality in videoQualities and not audio_only:
             # Video being handled
             save_to = self.save_to(title, ext=target_format.ext)
-            if save_to.exists:
+            if save_to.exists():
                 # let's presume it was previously processed.
                 return save_to
 
-            # Need to download both audio and video and then combine
+            # Need to download both audio and video and then merge
             logger.info(
                 f"Downloading video - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
             )
@@ -385,7 +393,7 @@ class Download(PostDownload):
             # Let's download audio
             target_audio_format = quality_infoFormat[self.audio_quality]
             logger.info(
-                f"Downloading video - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
+                f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
             audio_temp = self._download_format(
                 target_audio_format, callback_functions, streaming_intervals
@@ -401,7 +409,7 @@ class Download(PostDownload):
             save_to = self.save_to(
                 title, ext="mp3" if audio_bitrates else target_format.ext
             )
-            if save_to.exists:
+            if save_to.exists():
                 # let's presume it was previously processed.
                 return save_to
             logger.info(
