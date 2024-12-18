@@ -1,11 +1,13 @@
-from yt_dlp import YoutubeDL
-from yt_dlp_bonus import logger
-from yt_dlp_bonus.models import ExtractedInfo, VideoFormats, ExtractedInfoFormat
-from pathlib import Path
 import json
 import os
 import time
 import shutil
+import typing as t
+from uuid import uuid4
+from pathlib import Path
+from yt_dlp import YoutubeDL
+from yt_dlp_bonus import logger
+from yt_dlp_bonus.models import ExtractedInfo, VideoFormats, ExtractedInfoFormat
 from yt_dlp_bonus.constants import (
     VideoExtensions,
     videoQualities,
@@ -23,10 +25,9 @@ from yt_dlp_bonus.utils import (
     get_size_in_mb_from_bytes,
     run_system_command,
 )
-import typing as t
+
 from cloudscraper import create_scraper
 from yt_dlp.utils import sanitize_filename
-from uuid import uuid4
 
 qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
 
@@ -360,7 +361,7 @@ class Download(PostDownload):
                 >>>
               ```
             streaming_intervals (float, optional): Time to wait before downloading nex chunk. Defaults to 0.
-            audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to download in m4a format. Defaults to "128k".
+            audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
             audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
 
         Returns:
