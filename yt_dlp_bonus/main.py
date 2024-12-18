@@ -121,7 +121,9 @@ class YoutubeDLBonus(YoutubeDL):
         formats: list[ExtractedInfoFormat] = getattr(separated_videos, ext)
         response_items = {}
         for format in formats:
-            response_items[format.format_note] = format
+            if format.format_note and format.format_note in mediaQualities:
+                response_items[format.format_note] = format
+
         return t.cast(qualityExtractedInfoType, response_items)
 
     def update_audio_video_size(
@@ -147,10 +149,14 @@ class YoutubeDLBonus(YoutubeDL):
         assert_type(audio_quality, (audioQualitiesType, str), "audio_quality")
         chosen_audio_format = quality_extracted_info[audio_quality]
         for quality, format in quality_extracted_info.items():
-            format.audio_video_size = (
-                format.filesize_approx + chosen_audio_format.filesize_approx
-            )
+            if quality in videoQualities:
+                format.audio_video_size = (
+                    format.filesize_approx + chosen_audio_format.filesize_approx
+                )
+            else:
+                format.audio_video_size = format.filesize_approx
             quality_extracted_info[quality] = format
+
         return t.cast(qualityExtractedInfoType, quality_extracted_info)
 
 

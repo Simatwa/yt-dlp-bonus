@@ -14,10 +14,10 @@ class ExtractedInfoFormatFragments(BaseModel):
 
 class ExtractedInfoFormat(BaseModel):
     format_id: str
-    format_note: str
+    format_note: Optional[str] = None
     ext: str
     protocol: str
-    acodec: str
+    acodec: Optional[str] = None
     vcodec: str
     url: Optional[HttpUrl] = None
     width: Optional[int] = None
@@ -132,8 +132,8 @@ class ExtractedInfo(BaseModel):
     format_id: str
     ext: str
     protocol: str
-    language: Optional[str]
-    format_note: str
+    language: Optional[str] = None
+    format_note: Optional[str] = None
     filesize_approx: int
     tbr: float
     width: int
@@ -145,7 +145,7 @@ class ExtractedInfo(BaseModel):
     vbr: float
     stretched_ratio: Any = None
     aspect_ratio: Optional[float] = None
-    acodec: str
+    acodec: Optional[str] = None
     abr: float
     asr: float
     audio_channels: int
