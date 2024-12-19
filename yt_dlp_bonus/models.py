@@ -13,6 +13,9 @@ class ExtractedInfoFormatFragments(BaseModel):
 
 
 class ExtractedInfoFormat(BaseModel):
+    class DownloaderOptions(BaseModel):
+        http_chunk_size: Optional[int] = None
+
     format_id: str
     format_note: Optional[str] = None
     ext: str
@@ -37,6 +40,9 @@ class ExtractedInfoFormat(BaseModel):
     http_headers: dict[str, str]
     format: str
     audio_video_size: Optional[int] = 0
+    downloader_options: Optional[DownloaderOptions] = DownloaderOptions(
+        chunk_size=filesize_approx
+    )
 
 
 class ExtractedInfoThumbnail(BaseModel):

@@ -49,7 +49,13 @@ class YoutubeDLBonus(YoutubeDL):
         Returns:
             ExtractedInfo: Modelled video info
         """
-        return ExtractedInfo(**data)
+        extracted_data = ExtractedInfo(**data)
+        sorted_formats = []
+        for format in extracted_data.formats:
+            format.downloader_options.http_chunk_size = format.filesize_approx
+            sorted_formats.append(format)
+        extracted_data.formats = sorted_formats
+        return extracted_data
 
     def extract_info_and_form_model(self, url: str) -> ExtractedInfo:
         """Exract info for a particular url and model the response.
@@ -263,7 +269,10 @@ class PostDownload:
 
 
 class Download(PostDownload):
-    """Download audios and videos"""
+    """Download audios and videos
+    The download speed is relatively slow.
+    For faster downloads I recommend you use `yt_dlp.downloader.http.HttpFD`
+    """
 
     def __init__(
         self,
