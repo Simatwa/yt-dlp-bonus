@@ -2,24 +2,27 @@
 Model for extracted video info
 """
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 from typing import Optional, Any, Literal
 from datetime import datetime
 
 
 class ExtractedInfoFormatFragments(BaseModel):
-    url: HttpUrl
+    url: str
     duration: float
 
 
 class ExtractedInfoFormat(BaseModel):
+    class DownloaderOptions(BaseModel):
+        http_chunk_size: Optional[int] = None
+
     format_id: str
     format_note: Optional[str] = None
     ext: str
     protocol: str
     acodec: Optional[str] = None
     vcodec: str
-    url: Optional[HttpUrl] = None
+    url: Optional[str] = None
     width: Optional[int] = None
     height: Optional[int] = None
     fps: Optional[float] = None
@@ -37,17 +40,20 @@ class ExtractedInfoFormat(BaseModel):
     http_headers: dict[str, str]
     format: str
     audio_video_size: Optional[int] = 0
+    downloader_options: Optional[DownloaderOptions] = DownloaderOptions(
+        chunk_size=filesize_approx
+    )
 
 
 class ExtractedInfoThumbnail(BaseModel):
-    url: HttpUrl
+    url: str
     preference: int
     id: int
 
 
 class ExtractedInfoAutomaticCaptions(BaseModel):
     ext: str
-    url: HttpUrl
+    url: str
     name: str
 
 
@@ -80,15 +86,15 @@ class ExtractedInfo(BaseModel):
     title: str = Field(description="Video title")
     formats: list[ExtractedInfoFormat]
     thumbnails: list[ExtractedInfoThumbnail]
-    thumbnail: HttpUrl
+    thumbnail: str
     description: str
     channel_id: str
-    channel_url: HttpUrl
+    channel_url: str
     duration: float
     view_count: int
     average_rating: Optional[Any] = None
     age_limit: int
-    webpage_url: HttpUrl
+    webpage_url: str
     categories: list[str]
     tags: list[str]
     playable_in_embed: bool
@@ -106,11 +112,11 @@ class ExtractedInfo(BaseModel):
     channel_is_verified: bool = False
     uploader: str
     uploader_id: str
-    uploader_url: HttpUrl
+    uploader_url: str
     upload_date: datetime
     timestamp: int
     availability: Literal["public", "private"]
-    original_url: HttpUrl
+    original_url: str
     webpage_url_basename: str
     webpage_url_domain: str
     extractor: str

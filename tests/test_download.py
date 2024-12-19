@@ -4,13 +4,14 @@ from yt_dlp_bonus.main import Download, YoutubeDLBonus
 from yt_dlp_bonus.models import ExtractedInfo
 from tests import video_url, curdir
 
-yb = YoutubeDLBonus(params=dict(cookiefile=curdir.joinpath("cookies.txt")))
+yb = YoutubeDLBonus()
 extracted_info = yb.extract_info_and_form_model(video_url)
 
 
 @pytest.fixture
 def download():
     return Download(
+        yt=yb,
         working_directory=curdir.joinpath("assets"),
         file_prefix="TEST_",
         clear_temps=True,

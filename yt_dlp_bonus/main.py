@@ -27,7 +27,6 @@ from yt_dlp_bonus.utils import (
 )
 from yt_dlp_bonus.exceptions import UserInputError
 
-from cloudscraper import create_scraper
 from yt_dlp.utils import sanitize_filename
 
 qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
@@ -49,7 +48,13 @@ class YoutubeDLBonus(YoutubeDL):
         Returns:
             ExtractedInfo: Modelled video info
         """
-        return ExtractedInfo(**data)
+        extracted_data = ExtractedInfo(**data)
+        sorted_formats = []
+        for format in extracted_data.formats:
+            format.downloader_options.http_chunk_size = format.filesize_approx
+            sorted_formats.append(format)
+        extracted_data.formats = sorted_formats
+        return extracted_data
 
     def extract_info_and_form_model(self, url: str) -> ExtractedInfo:
         """Exract info for a particular url and model the response.
@@ -173,6 +178,7 @@ class PostDownload:
 
     def __init__(self, clear_temps: bool = False):
         self.clear_temps: bool = clear_temps
+        self.temp_dir: Path = None
         """Flag for controlling delition of temporary files"""
 
     def __enter__(self) -> "PostDownload":
@@ -186,6 +192,14 @@ class PostDownload:
         """
         if not self.clear_temps:
             logger.info(f"Ignoring temp-file clearance.")
+            if self.temp_dir:
+                for temp_file in temp_files:
+                    try:
+                        shutil.move(temp_file, self.temp_dir)
+                    except Exception as e:
+                        logger.error(
+                            f"Error while moving temp_file '{temp_file}' to temp_dir '{self.temp_dir}' - {e} "
+                        )
             return
         for temp_file in temp_files:
             logger.warning(f"Clearing temporary file - {temp_file}")
@@ -267,29 +281,26 @@ class Download(PostDownload):
 
     def __init__(
         self,
+        yt: YoutubeDLBonus,
         working_directory: Path | str = os.getcwd(),
-        clear_temps: bool = False,
+        clear_temps: bool = True,
         file_prefix: str = "",
         audio_quality: audioQualitiesType = "medium",
-        chunk_size: int = 1024,
     ):
         """`Download` Constructor
 
         Args:
             working_directory (Path | str, optional): Diretory for saving files. Defaults to os.getcwd().
             clear_temps (bool, optional): Flag for clearing temporary files after download. Defaults to True.
-            chunk_size (int, optional): Streaming download chunk_size. Defaults to 1024.
             file_prefix (str, optional): Downloaded filename prefix. Defaults to "".
             audio_quality (str, audioQualitieType): One of ["ultralow", "low", "medium"]. Defaults to "medium".
-            chunk_size (str, optional): Download stream chunk size. Defaults to 1024.
         """
         super().__init__(clear_temps=clear_temps)
+        self.yt = yt
         self.working_directory = Path(working_directory)
         self.clear_temps = clear_temps
         self.file_prefix = file_prefix
         self.audio_quality = audio_quality
-        self.chunk_size = chunk_size
-        self.session = create_scraper()
         assert (
             self.working_directory.is_dir()
         ), f"Working directory chosen is invalid - {self.working_directory}"
@@ -308,60 +319,18 @@ class Download(PostDownload):
             is_temp (bool, optional): Flag for temporary file. Defaults to False.
 
         Returns:
-            Path: Absolute path of the file.
+            Path: Path of the file.
         """
         sanitized_filename = sanitize_filename(self.file_prefix + title)
         parent = self.temp_dir if is_temp else self.working_directory
         extension = ext if ext.startswith(".") else ("." + ext)
         return parent.joinpath(sanitized_filename + extension)
 
-    def _download_format(
-        self,
-        target_format: ExtractedInfoFormat,
-        callback_functions: t.Sequence[t.Callable],
-        streaming_intervals: float = 0,
-    ) -> dict[str, Path | int]:
-        """Download a specific video format and save in temps folder.
-
-        Args:
-            title (str): Video title.
-            target_format (ExtractedInfoFormat)
-            callback_functions (t.Sequence[t.Callable])
-            streaming_intervals (float, optional): Time to wait before downloading nex chunk. Defaults to 0.
-
-        Returns:
-            dict[str, Path|int]: total_bytes, download_bytes and temp_saved_to.
-        """
-        resp = self.session.get(
-            target_format.url, headers=target_format.http_headers, stream=True
-        )
-        resp.raise_for_status()
-        temp_saved_to = self.save_to(str(uuid4()), ext=target_format.ext, is_temp=True)
-
-        callback_kwargs = dict(
-            total_bytes=resp.headers.get("Content-Length", 0),
-            downloaded_bytes=0,
-            saved_to=temp_saved_to,
-        )
-
-        with open(temp_saved_to, "wb") as fh:
-            for chunk in resp.iter_content(chunk_size=self.chunk_size):
-                callback_kwargs["downloaded_bytes"] += len(chunk)
-                fh.write(chunk)
-                for function in callback_functions:
-                    function(**callback_kwargs)
-                if streaming_intervals:
-                    time.sleep(streaming_intervals)
-
-        return callback_kwargs
-
     def run(
         self,
         title: str,
         quality: mediaQualitiesType,
         quality_infoFormat: qualityExtractedInfoType,
-        callback_functions: t.Sequence[t.Callable] = [],
-        streaming_intervals: float = 0,
         audio_bitrates: audioBitratesType = "128k",
         audio_only: bool = False,
     ) -> Path:
@@ -371,17 +340,11 @@ class Download(PostDownload):
             title (str): Video title.
             quality_infoFormat (qualityExtractedInfoType): Qualities mapped to their `ExtractedInfoFormats`.
             quality (mediaQualitiesType): Quality of the media to be downloaded.
-            callback_functions (t.Sequence[t.Callable]): Functions to be executed on each stream chunk. Defaults to [].
-              ```python
-              def callback_function(total_bytes:int, downloaded_bytes:int, saved_to:Path) -> NoReturn:
-                >>>
-              ```
-            streaming_intervals (float, optional): Time to wait before downloading nex chunk. Defaults to 0.
             audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
             audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
 
         Returns:
-              Path: Path to the complete downloadable file.
+              Path: Path to the downloaded file.
         """
         assert title, "Video title cannot be null"
         assert_membership(mediaQualities, quality)
@@ -404,20 +367,20 @@ class Download(PostDownload):
                 f"Downloading video - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
             )
             # Let's download video
-            video_temp = self._download_format(
-                target_format, callback_functions, streaming_intervals
-            )
+            video_temp = f"temp_{str(uuid4())}.{target_format.ext}"
+            self.yt.dl(name=video_temp, info=target_format.model_dump())
+
             # Let's download audio
             target_audio_format = quality_infoFormat[self.audio_quality]
             logger.info(
                 f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
-            audio_temp = self._download_format(
-                target_audio_format, callback_functions, streaming_intervals
-            )
+            audio_temp = f"temp_{str(uuid4())}.{target_audio_format.ext}"
+            self.yt.dl(name=audio_temp, info=target_format.model_dump())
+
             self.merge_audio_and_video(
-                audio_path=audio_temp["saved_to"],
-                video_path=video_temp["saved_to"],
+                audio_path=Path(audio_temp),
+                video_path=Path(video_temp),
                 output=save_to,
             )
         elif quality in audioQualities:
@@ -432,20 +395,20 @@ class Download(PostDownload):
             logger.info(
                 f"Downloading audio - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
             )
-            audio_temp = self._download_format(
-                target_format, callback_functions, streaming_intervals
-            )
+            audio_temp = f"temp_{str(uuid4())}.{target_format.ext}"
+            self.yt.dl(name=audio_temp, info=target_format.model_dump())
+            # Move audio to static
             if audio_bitrates:
                 # Convert to mp3
                 self.convert_audio_to_mp3_format(
-                    input=audio_temp["saved_to"], output=save_to, bitrate=audio_bitrates
+                    input=Path(audio_temp), output=save_to, bitrate=audio_bitrates
                 )
             else:
                 # Retain in it's format
                 # Move the file from tempfile to woking directory
-                shutil.move(audio_temp["saved_to"], save_to)
+                shutil.move(Path(audio_temp), save_to)
         else:
             raise UserInputError(
-                f"The targeted format and the quality mismatched - {quality}"
+                f"The targeted format and quality mismatched - {quality}"
             )
         return save_to
