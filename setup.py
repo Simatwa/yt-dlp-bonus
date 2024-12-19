@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="yt-dlp-bonus",
-    version="0.0.2",
+    version="0.0.3",
     license="The Unlicense",
     author="Smartwa",
     maintainer="Smartwa",
@@ -22,10 +22,7 @@ setup(
     entry_points={
         "console_scripts": [],
     },
-    install_requires=[
-        "cloudscraper>=1.2.71",
-        "yt-dlp>=2024.12.13",
-    ],
+    install_requires=["yt-dlp>=2024.12.13", "pydantic==2.9.2"],
     python_requires=">=3.10",
     keywords=[
         "yt-dlp",

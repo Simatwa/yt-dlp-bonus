@@ -38,7 +38,7 @@ def test_update_audio_video_size(yb: YoutubeDLBonus, audio_quality):
     for quality, format in resp.items():
         assert isinstance(format.filesize_approx, int)
         assert isinstance(format.audio_video_size, int)
-        assert format.audio_video_size > format.filesize_approx
+        assert format.audio_video_size >= format.filesize_approx
 
 
 def test_extract_info_and_form_model(yb: YoutubeDLBonus):

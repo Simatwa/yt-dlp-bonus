@@ -20,8 +20,8 @@ pip install yt-dlp-bonus -U
 
 ## Usage
 
-> [!IMPORTANT]
-> The package is at it's infancy stage. Interact with caution.
+> [!WARNING]
+> The package is at it's infancy stage.
 
 ### Download Video
 
@@ -33,23 +33,19 @@ logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
-download = Download(file_prefix="TEST_", clear_temps=False)
-
-yt_bonus = YoutubeDLBonus(params={"cookiefile": "/path/to/cookie/file.txt"})
+yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-mp4_quality_formats = yt_bonus.get_videos_quality_by_extension(
-    extracted_info=extracted_info, ext="mp4"
+quality_formats = yt_bonus.get_videos_quality_by_extension(
+    extracted_info=extracted_info
 )
 
-save_to = download.run(
-    title=extracted_info.title,
-    quality="360p",
-    quality_infoFormat=mp4_quality_formats,
+download = Download(yt=yt_bonus)
+download.run(
+    title=extracted_info.title, quality="480p", quality_infoFormat=quality_formats
 )
 
-print(save_to)
 ```
 
 ### Download Audio
@@ -62,25 +58,23 @@ logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
-download = Download(file_prefix="TEST_", clear_temps=False)
-
-yt_bonus = YoutubeDLBonus(params={"cookiefile": "/path/to/cookie/file.txt"})
+yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-mp4_quality_formats = yt_bonus.get_videos_quality_by_extension(
-    extracted_info=extracted_info, ext="mp4"
+quality_formats = yt_bonus.get_videos_quality_by_extension(
+    extracted_info=extracted_info
 )
 
-saved_to = download.run(
-    title=extracted_info.title,
-    quality="medium",
-    quality_infoFormat=mp4_quality_formats,
-    audio_bitrates="192k"
+download = Download(yt=yt_bonus)
+download.run(
+    title=extracted_info.title, quality="medium", quality_infoFormat=quality_formats
 )
 
-print(saved_to)
 ```
+
+> [!NOTE]
+> Incase requests are detected as coming from bot then consider using a proxy from **Canada** or any other country that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
 
 # License
 

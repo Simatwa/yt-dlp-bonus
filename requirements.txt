@@ -1,2 +1,2 @@
-cloudscraper>=1.2.71
 yt-dlp>=2024.12.13
+pydantic==2.9.2
