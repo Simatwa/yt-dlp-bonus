@@ -376,7 +376,7 @@ class Download(PostDownload):
                 f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
             audio_temp = f"temp_{str(uuid4())}.{target_audio_format.ext}"
-            self.yt.dl(name=audio_temp, info=target_format.model_dump())
+            self.yt.dl(name=audio_temp, info=target_audio_format.model_dump())
 
             self.merge_audio_and_video(
                 audio_path=Path(audio_temp),
