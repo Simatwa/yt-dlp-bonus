@@ -105,3 +105,22 @@ audioBitratesType = t.Literal[
     "256k",
     "320k",
 ]
+
+video_audio_quality_map: dict[videoQualitiesType, audioQualitiesType] = {
+    "144p": "ultralow",
+    "240p": "low",
+    "360p": "medium",
+    "480p": "medium",
+    "720p": "medium",
+    "1080p": "medium",
+    "1440p": "medium",
+    "2160p": "medium",
+    "720p50": "medium",
+    "1080p50": "medium",
+    "1440p50": "medium",
+    "2160p50": "medium",
+    "720p60": "medium",
+    "1080p60": "medium",
+    "1440p60": "medium",
+    "2160p60": "medium",
+}

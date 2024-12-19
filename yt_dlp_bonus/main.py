@@ -16,6 +16,7 @@ from yt_dlp_bonus.constants import (
     audioQualitiesType,
     mediaQualitiesType,
     audioBitratesType,
+    video_audio_quality_map,
 )
 from yt_dlp_bonus.utils import (
     logger,
@@ -285,7 +286,7 @@ class Download(PostDownload):
         working_directory: Path | str = os.getcwd(),
         clear_temps: bool = True,
         file_prefix: str = "",
-        audio_quality: audioQualitiesType = "medium",
+        audio_quality: audioQualitiesType = None,
     ):
         """`Download` Constructor
 
@@ -293,7 +294,7 @@ class Download(PostDownload):
             working_directory (Path | str, optional): Diretory for saving files. Defaults to os.getcwd().
             clear_temps (bool, optional): Flag for clearing temporary files after download. Defaults to True.
             file_prefix (str, optional): Downloaded filename prefix. Defaults to "".
-            audio_quality (str, audioQualitieType): One of ["ultralow", "low", "medium"]. Defaults to "medium".
+            audio_quality (str, audioQualitieType): Default audio quality to be merged with video. Defaults to None [auto].
         """
         super().__init__(clear_temps=clear_temps)
         self.yt = yt
@@ -371,7 +372,13 @@ class Download(PostDownload):
             self.yt.dl(name=video_temp, info=target_format.model_dump())
 
             # Let's download audio
-            target_audio_format = quality_infoFormat[self.audio_quality]
+            target_audio_format = quality_infoFormat[
+                (
+                    self.audio_quality
+                    if self.audio_quality
+                    else video_audio_quality_map.get(quality, "medium")
+                )
+            ]
             logger.info(
                 f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
