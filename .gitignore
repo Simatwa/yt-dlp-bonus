@@ -167,4 +167,5 @@ cookies.txt
 *.mp3
 *.m4a
 *.opus
+*.part
 temps/*
