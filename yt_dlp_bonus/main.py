@@ -397,6 +397,7 @@ class Download(PostDownload):
         quality_infoFormat: qualityExtractedInfoType,
         audio_bitrates: audioBitratesType = "128k",
         audio_only: bool = False,
+        retain_extension: bool = False,
     ) -> Path:
         """Download the media and save in disk.
 
@@ -406,6 +407,7 @@ class Download(PostDownload):
             quality (mediaQualitiesType): Quality of the media to be downloaded.
             audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
             audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
+            retain_extension (bool, optional): Use the format's extension and not default mp4. Defaults to False.
 
         Returns:
               Path: Path to the downloaded file.
@@ -421,7 +423,9 @@ class Download(PostDownload):
         title = f"{title} {quality}"
         if quality in videoQualities and not audio_only:
             # Video being handled
-            save_to = self.save_to(title, ext=target_format.ext)
+            save_to = self.save_to(
+                title, ext=target_format.ext if retain_extension else "mp4"
+            )
             if save_to.exists():
                 # let's presume it was previously processed.
                 return save_to
