@@ -11,7 +11,7 @@ install-deps:
 
 # Target to run tests
 install:
-	pip install -e . --use-pep517
+	pip install .
 
 # Target to test RestAPI V1
 test:
