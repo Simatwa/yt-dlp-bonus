@@ -32,6 +32,25 @@ from yt_dlp.utils import sanitize_filename
 
 qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
 
+height_quality_map: dict[int | None, mediaQualitiesType] = {
+    144: "144p",
+    240: "240p",
+    360: "360p",
+    480: "480p",
+    720: "720p",
+    1080: "1080p",
+    1350: "1440p",
+    2026: "2160p",
+    None: "medium",
+}
+
+protocol_informat_map = {
+    "m3u8_native": "m3u8_native",
+    "https+https": "m3u8_native",
+    "m3u8_native+https": "m3u8_native",
+    "https": "https",
+}
+
 
 class YoutubeDLBonus(YoutubeDL):
     def __init__(self, *args, **kwargs):
@@ -40,20 +59,64 @@ class YoutubeDLBonus(YoutubeDL):
     def __enter__(self) -> "YoutubeDLBonus":
         return self
 
-    def model_extracted_info(self, data: dict) -> ExtractedInfo:
+    def get_format_quality(
+        self, info_format: ExtractedInfoFormat
+    ) -> mediaQualitiesType:
+        """Tries to find out the quality of a format.
+
+        Args:
+            info_format (ExtractedInfoFormat): Format
+
+        Returns:
+            mediaQualitiesType: Format quality
+        """
+        assert_instance(info_format, ExtractedInfoFormat)
+
+        if info_format.format_note:
+            if info_format.format_note in mediaQualities:
+                return info_format.format_note
+            if (
+                info_format.format_note == "Default"
+                and info_format.resolution == "audio only"
+            ):
+                return "medium"
+
+        return height_quality_map.get(info_format.height)
+
+    def model_extracted_info(
+        self, data: dict, filter_best_protocol: bool = True
+    ) -> ExtractedInfo:
         """Generate a model for the extracted video info.
 
         Args:
             data (dict): Extracted video info.
+            filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
 
         Returns:
             ExtractedInfo: Modelled video info
         """
         extracted_data = ExtractedInfo(**data)
         sorted_formats = []
+        target_format_protocol = protocol_informat_map.get(data["protocol"], "https")
+        # print(data["protocol"], target_format_protocol)
         for format in extracted_data.formats:
-            format.downloader_options.http_chunk_size = format.filesize_approx
-            sorted_formats.append(format)
+            if filter_best_protocol:
+                if format.protocol == target_format_protocol:
+                    # print(target_format_protocol, format.protocol)
+                    if not format.format_note:
+                        # fragmented
+                        format.format_note = self.get_format_quality(format)
+                    else:
+                        # https
+                        format.downloader_options.http_chunk_size = (
+                            format.filesize_approx
+                        )
+                sorted_formats.append(format)
+            else:
+                format.downloader_options.http_chunk_size = format.filesize_approx
+
+                sorted_formats.append(format)
+
         extracted_data.formats = sorted_formats
         return extracted_data
 
