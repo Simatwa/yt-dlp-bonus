@@ -54,7 +54,7 @@ class ExtractedInfoThumbnail(BaseModel):
 class ExtractedInfoAutomaticCaptions(BaseModel):
     ext: str
     url: str
-    name: str
+    name: Optional[str] = None
 
 
 class ExtractedInfoHeatmap(BaseModel):

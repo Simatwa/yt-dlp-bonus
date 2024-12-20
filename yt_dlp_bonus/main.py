@@ -298,7 +298,7 @@ class Download(PostDownload):
         """
         super().__init__(clear_temps=clear_temps)
         self.yt = yt
-        self.working_directory = Path(working_directory)
+        self.working_directory = Path(str(working_directory))
         self.clear_temps = clear_temps
         self.file_prefix = file_prefix
         self.audio_quality = audio_quality
