@@ -348,7 +348,7 @@ class Download(PostDownload):
         yt: YoutubeDLBonus,
         working_directory: Path | str = os.getcwd(),
         clear_temps: bool = True,
-        file_prefix: str = "",
+        filename_prefix: str = "",
         audio_quality: audioQualitiesType = None,
     ):
         """`Download` Constructor
@@ -356,14 +356,14 @@ class Download(PostDownload):
         Args:
             working_directory (Path | str, optional): Diretory for saving files. Defaults to os.getcwd().
             clear_temps (bool, optional): Flag for clearing temporary files after download. Defaults to True.
-            file_prefix (str, optional): Downloaded filename prefix. Defaults to "".
+            filename_prefix (str, optional): Downloaded filename prefix. Defaults to "".
             audio_quality (str, audioQualitieType): Default audio quality to be merged with video. Defaults to None [auto].
         """
         super().__init__(clear_temps=clear_temps)
         self.yt = yt
         self.working_directory = Path(str(working_directory))
         self.clear_temps = clear_temps
-        self.file_prefix = file_prefix
+        self.filename_prefix = filename_prefix
         self.audio_quality = audio_quality
         assert (
             self.working_directory.is_dir()
@@ -385,7 +385,7 @@ class Download(PostDownload):
         Returns:
             Path: Path of the file.
         """
-        sanitized_filename = sanitize_filename(self.file_prefix + title)
+        sanitized_filename = sanitize_filename(self.filename_prefix + title)
         parent = self.temp_dir if is_temp else self.working_directory
         extension = ext if ext.startswith(".") else ("." + ext)
         return parent.joinpath(sanitized_filename + extension)
