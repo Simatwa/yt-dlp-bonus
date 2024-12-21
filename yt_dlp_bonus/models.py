@@ -98,7 +98,6 @@ class ExtractedInfo(BaseModel):
     playable_in_embed: bool
     live_status: str
     release_timestamp: Optional[Any] = None
-    format_sort_fields: list[str] = Field(alias="_format_sort_fields")
     automatic_captions: dict[str, list[ExtractedInfoAutomaticCaptions]]
     subtitles: dict
     comment_count: Optional[int] = None
@@ -109,8 +108,8 @@ class ExtractedInfo(BaseModel):
     channel_follower_count: int
     channel_is_verified: bool = False
     uploader: str
-    uploader_id: str
-    uploader_url: str
+    uploader_id: Optional[str] = None
+    uploader_url: Optional[str] = None
     upload_date: datetime
     timestamp: int
     availability: Literal["public", "private"]
@@ -128,7 +127,6 @@ class ExtractedInfo(BaseModel):
     is_live: bool
     was_live: bool
     requested_subtitles: Any = None
-    has_drm: Any = Field(None, alias="_has_drm")
     epoch: int
     requested_formats: list[ExtractedInfoRequestedFormats]
     # Others
@@ -153,6 +151,23 @@ class ExtractedInfo(BaseModel):
     abr: float
     asr: float
     audio_channels: int
+
+
+class SearchExtractedInfo(BaseModel):
+    """Search results"""
+
+    id: str
+    title: str
+    entries: list[ExtractedInfo]
+    webpage_url: str
+    original_url: str
+    webpage_url_basename: str
+    webpage_url_domain: Optional[str] = None
+    extractor: str
+    extractor_key: str
+    release_year: Optional[Any] = None
+    playlist_count: Optional[int] = 0
+    epoch: int
 
 
 class VideoFormats(BaseModel):

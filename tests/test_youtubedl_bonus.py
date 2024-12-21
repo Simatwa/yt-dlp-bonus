@@ -1,5 +1,5 @@
 from yt_dlp_bonus.main import YoutubeDLBonus, qualityExtractedInfoType
-from yt_dlp_bonus.models import ExtractedInfo
+from yt_dlp_bonus.models import ExtractedInfo, SearchExtractedInfo
 from tests import curdir
 import pytest
 from tests import curdir
@@ -44,3 +44,11 @@ def test_update_audio_video_size(yb: YoutubeDLBonus, audio_quality):
 def test_extract_info_and_form_model(yb: YoutubeDLBonus):
     extracted_info = yb.extract_info_and_form_model(video_url)
     assert isinstance(extracted_info, ExtractedInfo)
+
+
+@pytest.mark.parametrize(
+    ["query", "limit", "filter_best_protocol"], [("hey", 1, True), ("hello", 2, False)]
+)
+def test_search_and_form_model(yb: YoutubeDLBonus, query, limit, filter_best_protocol):
+    search_results = yb.search_and_form_model(query, limit, filter_best_protocol)
+    assert isinstance(search_results, SearchExtractedInfo)

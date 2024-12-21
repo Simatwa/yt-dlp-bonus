@@ -6,7 +6,12 @@ import typing as t
 from uuid import uuid4
 from pathlib import Path
 from yt_dlp import YoutubeDL
-from yt_dlp_bonus.models import ExtractedInfo, VideoFormats, ExtractedInfoFormat
+from yt_dlp_bonus.models import (
+    ExtractedInfo,
+    VideoFormats,
+    ExtractedInfoFormat,
+    SearchExtractedInfo,
+)
 from yt_dlp_bonus.constants import (
     VideoExtensions,
     videoQualities,
@@ -43,6 +48,7 @@ height_quality_map: dict[int | None, mediaQualitiesType] = {
     2026: "2160p",
     None: "medium",
 }
+"""Maps the ExtractedInfoFormat.height to the video quality"""
 
 protocol_informat_map = {
     "m3u8_native": "m3u8_native",
@@ -50,13 +56,25 @@ protocol_informat_map = {
     "m3u8_native+https": "m3u8_native",
     "https": "https",
 }
+"""Maps the `ExtractedInfo.protocol` to `ExtractedInfoFormat.protocol`"""
 
 
 class YoutubeDLBonus(YoutubeDL):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """An extension class of YoutubeDL which pydantically models search results and manipulate them."""
+
+    def __init__(self, params: dict = {}, auto_init: bool = True):
+        """`YoutubeDLBonus` Constructor
+
+        Args:
+            params (dict, optional): YoutubeDL options. Defaults to {}.
+            auto_init (optional, bool): Whether to load the default extractors and print header (if verbose).
+                            Set to 'no_verbose_header' to not print the header. Defaults to True.
+        """
+        params.setdefault("noplaylist", True)
+        super().__init__(params, auto_init)
 
     def __enter__(self) -> "YoutubeDLBonus":
+        self.save_console_title()
         return self
 
     def get_format_quality(
@@ -83,23 +101,24 @@ class YoutubeDLBonus(YoutubeDL):
 
         return height_quality_map.get(info_format.height)
 
-    def model_extracted_info(
-        self, data: dict, filter_best_protocol: bool = True
+    def process_extracted_info(
+        self, extracted_info: ExtractedInfo, filter_best_protocol: bool = True
     ) -> ExtractedInfo:
-        """Generate a model for the extracted video info.
+        """Updates https chunk size to formats and filter best protocol.
 
         Args:
-            data (dict): Extracted video info.
-            filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
+            extracted_info (ExtractedInfo)
+            filter_best_protocol (bool, optional): Retain only formats that can be downloaded faster. Defaults to True.
 
         Returns:
-            ExtractedInfo: Modelled video info
+            ExtractedInfo: Processed ExtractedInfo
         """
-        extracted_data = ExtractedInfo(**data)
         sorted_formats = []
-        target_format_protocol = protocol_informat_map.get(data["protocol"], "https")
+        target_format_protocol = protocol_informat_map.get(
+            extracted_info.protocol, "https"
+        )
         # print(data["protocol"], target_format_protocol)
-        for format in extracted_data.formats:
+        for format in extracted_info.formats:
             if filter_best_protocol:
                 if format.protocol == target_format_protocol:
                     # print(target_format_protocol, format.protocol)
@@ -117,20 +136,66 @@ class YoutubeDLBonus(YoutubeDL):
 
                 sorted_formats.append(format)
 
-        extracted_data.formats = sorted_formats
-        return extracted_data
+        extracted_info.formats = sorted_formats
+        return extracted_info
 
-    def extract_info_and_form_model(self, url: str) -> ExtractedInfo:
+    def model_extracted_info(
+        self, data: dict, filter_best_protocol: bool = True
+    ) -> ExtractedInfo:
+        """Generate a model for the extracted video info.
+
+        Args:
+            data (dict): Extracted video info.
+            filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
+
+        Returns:
+            ExtractedInfo: Modelled video info
+        """
+        extracted_info = ExtractedInfo(**data)
+        return self.process_extracted_info(extracted_info, filter_best_protocol)
+
+    def extract_info_and_form_model(
+        self, url: str, filter_best_protocol: bool = True
+    ) -> ExtractedInfo:
         """Exract info for a particular url and model the response.
 
         Args:
             url (str): Youtube video url
+            filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
 
         Returns:
             ExtractedInfo: Modelled video info
         """
         extracted_info = self.extract_info(url, download=False)
-        return self.model_extracted_info(extracted_info)
+        return self.model_extracted_info(extracted_info, filter_best_protocol)
+
+    def search_and_form_model(
+        self, query: str, limit: int = 5, filter_best_protocol: bool = True
+    ) -> SearchExtractedInfo:
+        """Perform a video search and model the response.
+
+        Args:
+            query (str): Search query.
+            limit (int, optional): Search results (video) amount. Defaults to 5.
+            filter_best_protocol (bool, optional): Retain only formats that can be downloaded faster. Defaults to True.
+        Returns:
+            SearcheExtractedInfo: Modelled search results
+        """
+        assert (
+            self.params.get("noplaylist", True) is True
+        ), f"This function is only useful when playlist searching is disabled. Deactivate it on params 'noplaylist=True'"
+        assert limit > 0, f"Results Limit should be greater than 0 not {limit}."
+        search_extracted_info = self.extract_info(
+            f"ytsearch{limit}:{query}", download=False
+        )
+        modelled_search_extracted_info = SearchExtractedInfo(**search_extracted_info)
+        processed_entries = []
+        for extracted_info in modelled_search_extracted_info.entries:
+            processed_entries.append(
+                self.process_extracted_info(extracted_info, filter_best_protocol)
+            )
+        modelled_search_extracted_info.entries = processed_entries
+        return modelled_search_extracted_info
 
     def load_extracted_info_from_json_file(
         self, to_json_path: Path | str
