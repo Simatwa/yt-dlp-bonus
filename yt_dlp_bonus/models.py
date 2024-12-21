@@ -98,6 +98,7 @@ class ExtractedInfo(BaseModel):
     playable_in_embed: bool
     live_status: str
     release_timestamp: Optional[Any] = None
+    # format_sort_fields: list[str] = Field(alias="_format_sort_fields")
     automatic_captions: dict[str, list[ExtractedInfoAutomaticCaptions]]
     subtitles: dict
     comment_count: Optional[int] = None
@@ -127,6 +128,7 @@ class ExtractedInfo(BaseModel):
     is_live: bool
     was_live: bool
     requested_subtitles: Any = None
+    # has_drm: Any = Field(None, alias="_has_drm")
     epoch: int
     requested_formats: list[ExtractedInfoRequestedFormats]
     # Others
