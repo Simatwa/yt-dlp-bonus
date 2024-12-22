@@ -40,7 +40,7 @@ def get_size_in_mb_from_bytes(size_in_bytes: int) -> str:
     Returns:
         str: Size in Mb + "MB" string.
     """
-    if size_in_bytes:
+    if isinstance(size_in_bytes, (int, float)):
         if size_in_bytes >= 1_000_000_000:
             size_in_gb = size_in_bytes / 1_000_000_000
             return str(round(size_in_gb, 2)) + " GB"
