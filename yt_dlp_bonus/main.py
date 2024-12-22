@@ -30,7 +30,11 @@ from yt_dlp_bonus.utils import (
     get_size_in_mb_from_bytes,
     run_system_command,
 )
-from yt_dlp_bonus.exceptions import UserInputError
+from yt_dlp_bonus.exceptions import (
+    UserInputError,
+    FileSizeOutOfRange,
+    UknownDownloadFailure,
+)
 
 from yt_dlp.utils import sanitize_filename
 
@@ -455,6 +459,33 @@ class Download(PostDownload):
         extension = ext if ext.startswith(".") else ("." + ext)
         return parent.joinpath(sanitized_filename + extension)
 
+    def _verify_download(self, download_resp: tuple[str]) -> t.NoReturn:
+        """Tries to detect presence of download failure and raise exception if found.
+
+        Args:
+            download_resp (tuple[str]): response of `self.yt.download`
+
+        Raises:
+            FileSizeOutOfRange: When a file to be downloaded is not within the min_filesize and max_filesize.
+            UknownDownloadFailure: When ytdl fails to download a file due to unknown reasons.
+
+        Returns:
+            t.NoReturn
+        """
+        is_sucessful, is_new_download = download_resp
+        if not is_sucessful:
+            min_filesize = self.yt.params.get("min_filesize")
+            max_filesize = self.yt.params.get("max_filesize")
+            if min_filesize or max_filesize:
+                raise FileSizeOutOfRange(
+                    "The file-size of the requested quality is out of downloadable "
+                    f"range {get_size_in_mb_from_bytes(min_filesize)} - {get_size_in_mb_from_bytes(max_filesize)}."
+                )
+            raise UknownDownloadFailure(
+                f"File of the requested quality could not be downloaded due to unknown reasons. "
+                "Try downloading other smaller qualities."
+            )
+
     def run(
         self,
         title: str,
@@ -503,7 +534,9 @@ class Download(PostDownload):
             )
             # Let's download video
             video_temp = f"temp_{str(uuid4())}.{target_format.ext}"
-            self.yt.dl(name=video_temp, info=target_format.model_dump())
+            self._verify_download(
+                self.yt.dl(name=video_temp, info=target_format.model_dump())
+            )
 
             # Let's download audio
             target_audio_format = quality_infoFormat[
@@ -517,7 +550,9 @@ class Download(PostDownload):
                 f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
             audio_temp = f"temp_{str(uuid4())}.{target_audio_format.ext}"
-            self.yt.dl(name=audio_temp, info=target_audio_format.model_dump())
+            self._verify_download(
+                self.yt.dl(name=audio_temp, info=target_audio_format.model_dump())
+            )
 
             self.merge_audio_and_video(
                 audio_path=Path(audio_temp),
@@ -537,7 +572,9 @@ class Download(PostDownload):
                 f"Downloading audio - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
             )
             audio_temp = f"temp_{str(uuid4())}.{target_format.ext}"
-            self.yt.dl(name=audio_temp, info=target_format.model_dump())
+            self._verify_download(
+                self.yt.dl(name=audio_temp, info=target_format.model_dump())
+            )
             # Move audio to static
             if audio_bitrates:
                 # Convert to mp3
