@@ -23,16 +23,20 @@ def test_load_extracted_info_from_json_file(yb: YoutubeDLBonus):
     assert isinstance(resp, ExtractedInfo)
 
 
-def test_get_videos_quality_by_extension(yb: YoutubeDLBonus):
+@pytest.mark.parametrize(
+    ["extension"],
+    [("mp4",), ("webm",)],
+)
+def test_get_video_qualities_with_extension(yb: YoutubeDLBonus, extension):
     extracted_data = extract_info_from_json_file(yb)
-    resp_1 = yb.get_videos_quality_by_extension(extracted_data, "mp4")
+    resp_1 = yb.get_video_qualities_with_extension(extracted_data, extension)
     assert isinstance(resp_1, dict)
 
 
 @pytest.mark.parametrize(["audio_quality"], [("ultralow",), ("low",), ("medium",)])
 def test_update_audio_video_size(yb: YoutubeDLBonus, audio_quality):
     extracted_data = extract_info_from_json_file(yb)
-    mp4_quality_formats = yb.get_videos_quality_by_extension(extracted_data, "mp4")
+    mp4_quality_formats = yb.get_video_qualities_with_extension(extracted_data, "mp4")
     resp = yb.update_audio_video_size(mp4_quality_formats, audio_quality)
     assert type(resp) in (qualityExtractedInfoType, dict)
     for quality, format in resp.items():

@@ -3,12 +3,12 @@ from setuptools import setup
 
 setup(
     name="yt-dlp-bonus",
-    version="0.0.8",
+    version="0.0.9",
     license="The Unlicense",
     author="Smartwa",
     maintainer="Smartwa",
     author_email="simatwacaleb@proton.me",
-    description="A feature-rich command-line audio/video downloader bonus.",
+    description="An extension of yt-dlp targeting YouTube with pydantic support.",
     packages=["yt_dlp_bonus"],
     url="https://github.com/Simatwa/yt-dlp-bonus",
     project_urls={

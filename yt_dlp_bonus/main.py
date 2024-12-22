@@ -1,6 +1,5 @@
 import json
 import os
-import time
 import shutil
 import typing as t
 from uuid import uuid4
@@ -240,7 +239,7 @@ class YoutubeDLBonus(YoutubeDL):
 
         return VideoFormats(webm=webm_videos, mp4=mp4_videos)
 
-    def get_videos_quality_by_extension(
+    def get_video_qualities_with_extension(
         self, extracted_info: ExtractedInfo, ext: t.Literal["webm", "mp4"] = "mp4"
     ) -> qualityExtractedInfoType:
         """Create a map of video qualities and their metadata.
@@ -253,6 +252,7 @@ class YoutubeDLBonus(YoutubeDL):
             dict[mediaQualities,ExtractedInfoFormat]
         """
         separated_videos = self.separate_videos_by_extension(extracted_info)
+        assert_membership(["webm", "mp4"], ext, "Extension")
         formats: list[ExtractedInfoFormat] = getattr(separated_videos, ext)
         response_items = {}
         for format in formats:
@@ -478,9 +478,11 @@ class Download(PostDownload):
               Path: Path to the downloaded file.
         """
         assert title, "Video title cannot be null"
-        assert_membership(mediaQualities, quality)
-        assert_membership(audioBitrates + (None,), audio_bitrates)
-        assert_type(quality_infoFormat, (qualityExtractedInfoType, dict))
+        assert_membership(mediaQualities, quality, "Quality")
+        assert_membership(audioBitrates + (None,), audio_bitrates, "audio_bitrates")
+        assert_type(
+            quality_infoFormat, (qualityExtractedInfoType, dict), "qualty_infoFormat"
+        )
         assert (
             quality in quality_infoFormat
         ), f"The video does not support the targeted quality - {quality}"
@@ -544,7 +546,7 @@ class Download(PostDownload):
                 )
             else:
                 # Retain in it's format
-                # Move the file from tempfile to woking directory
+                # Move the file from tempfile to working directory
                 shutil.move(Path(audio_temp), save_to)
         else:
             raise UserInputError(

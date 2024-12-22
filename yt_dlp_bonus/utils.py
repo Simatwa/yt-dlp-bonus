@@ -23,12 +23,12 @@ def assert_type(obj, type_: object | Sequence[object], name: str = "Value"):
             type(obj) in type_
         ), f"{name} must be one of types {type_} not {type(obj)}"
     else:
-        assert type(obj) is type_, f"{name} must of type {type_} not {type(obj)}"
+        assert type(obj) is type_, f"{name} must be of type {type_} not {type(obj)}"
 
 
-def assert_membership(elements: Sequence, member: Any):
+def assert_membership(elements: Sequence, member: Any, name="Value"):
     """Asserts member is one of the elements"""
-    assert member in elements, f"{member} is not one of {elements}"
+    assert member in elements, f"{name} '{member}' is not one of {elements}"
 
 
 def get_size_in_mb_from_bytes(size_in_bytes: int) -> str:
@@ -41,8 +41,12 @@ def get_size_in_mb_from_bytes(size_in_bytes: int) -> str:
         str: Size in Mb + "MB" string.
     """
     if size_in_bytes:
-        size_in_mb = size_in_bytes / 1_000_000
-        return str(round(size_in_mb, 2)) + " MB"
+        if size_in_bytes >= 1_000_000_000:
+            size_in_gb = size_in_bytes / 1_000_000_000
+            return str(round(size_in_gb, 2)) + " GB"
+        else:
+            size_in_mb = size_in_bytes / 1_000_000
+            return str(round(size_in_mb, 2)) + " MB"
     else:
         return "[Unknown] Mb"
 

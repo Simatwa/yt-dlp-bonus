@@ -168,4 +168,5 @@ cookies.txt
 *.m4a
 *.opus
 *.part
+*.ytdl
 temps/*

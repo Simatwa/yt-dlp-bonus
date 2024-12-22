@@ -10,7 +10,7 @@
 <a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com/Simatwa/yt-dlp-bonus"/></a>
 </p>
 
-A feature-rich command-line audio/video downloader bonus.
+This library does a simple yet the Lord's work; extends [yt-dlp](https://github.com/yt-dlp/yt-dlp) *(YoutubeDL)* and adds modelling support to the extracted YouTube info using [pydantic](https://github.com/pydantic/pydantic).
 
 ## Installation
 
@@ -18,13 +18,39 @@ A feature-rich command-line audio/video downloader bonus.
 pip install yt-dlp-bonus -U
 ```
 
-
 ## Usage
 
-> [!WARNING]
-> The package is at it's infancy stage.
+<details open>
+
+<summary>
+
+### Search videos
+
+</summary>
+
+```python
+from yt_dlp_bonus import YoutubeDLBonus
+
+yt = YoutubeDLBonus()
+
+search_results = yt.search_and_form_model(
+    query="hello",
+    limit=1
+    )
+
+print(search_results)
+
+```
+
+</details>
+
+<details>
+
+<summary>
 
 ### Download Video
+
+</summary>
 
 ```python
 import logging
@@ -38,7 +64,7 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_videos_quality_by_extension(
+quality_formats = yt_bonus.get_video_qualities_with_extension(
     extracted_info=extracted_info
 )
 
@@ -49,7 +75,14 @@ download.run(
 
 ```
 
+</details>
+
+<details>
+<summary>
+
 ### Download Audio
+
+</summary>
 
 ```python
 import logging
@@ -63,7 +96,7 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_videos_quality_by_extension(
+quality_formats = yt_bonus.get_video_qualities_with_extension(
     extracted_info=extracted_info
 )
 
@@ -73,6 +106,8 @@ download.run(
 )
 
 ```
+
+</details>
 
 > [!NOTE]
 > Incase requests are detected as coming from bot then consider using a proxy from **Canada** or any other country that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).

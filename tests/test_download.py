@@ -1,7 +1,6 @@
 import pytest
 from pathlib import Path
 from yt_dlp_bonus.main import Download, YoutubeDLBonus
-from yt_dlp_bonus.models import ExtractedInfo
 from tests import video_url, curdir
 
 yb = YoutubeDLBonus()
@@ -31,7 +30,7 @@ def download():
 def test_download_audio_and_video(
     download: Download, quality, extension, bitrates, audio_only
 ):
-    info_format = yb.get_videos_quality_by_extension(
+    info_format = yb.get_video_qualities_with_extension(
         extracted_info=extracted_info, ext=extension
     )
     saved_to: Path = download.run(
