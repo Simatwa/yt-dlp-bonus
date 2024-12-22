@@ -479,7 +479,7 @@ class Download(PostDownload):
             if min_filesize or max_filesize:
                 raise FileSizeOutOfRange(
                     "The file-size of the requested quality is out of downloadable "
-                    f"range {get_size_in_mb_from_bytes(min_filesize)} - {get_size_in_mb_from_bytes(max_filesize)}."
+                    f"range ({get_size_in_mb_from_bytes(min_filesize)} - {get_size_in_mb_from_bytes(max_filesize)})."
                 )
             raise UknownDownloadFailure(
                 f"File of the requested quality could not be downloaded due to unknown reasons. "
