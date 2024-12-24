@@ -12,12 +12,16 @@ from yt_dlp_bonus.models import (
     SearchExtractedInfo,
 )
 from yt_dlp_bonus.constants import (
-    VideoExtensions,
+    videoExtensions,
+    audioExtensions,
     videoQualities,
     audioQualities,
     mediaQualities,
     audioBitrates,
+    videoExtensionsType,
+    audioExtensionsType,
     audioQualitiesType,
+    videoQualitiesType,
     mediaQualitiesType,
     audioBitratesType,
     video_audio_quality_map,
@@ -34,6 +38,7 @@ from yt_dlp_bonus.exceptions import (
     UserInputError,
     FileSizeOutOfRange,
     UknownDownloadFailure,
+    IncompatibleMediaFormats,
 )
 
 from yt_dlp_bonus.utils import sanitize_filename
@@ -231,36 +236,45 @@ class YoutubeDLBonus(YoutubeDL):
         mp4_videos: list = []
 
         for format in extracted_info.formats:
-            if format.ext == VideoExtensions.webm:
+            if format.ext in audioExtensions:
+                ## video = [ext=webm, format_note = videoQualities]
+                ## audio = [ext=webm, format_note = audioQualities]
                 if format.format_note in audioQualities:
                     # Let's append audio to be accessible from both extensions
                     webm_videos.append(format)
                     mp4_videos.append(format)
                 else:
                     webm_videos.append(format)
-            elif format.ext == VideoExtensions.mp4:
+            elif format.ext == "mp4":
                 mp4_videos.append(format)
 
         return VideoFormats(webm=webm_videos, mp4=mp4_videos)
 
     def get_video_qualities_with_extension(
-        self, extracted_info: ExtractedInfo, ext: t.Literal["webm", "mp4"] = "webm"
+        self,
+        extracted_info: ExtractedInfo,
+        ext: videoExtensionsType = "webm",
+        audio_ext: audioExtensionsType = "webm",
     ) -> qualityExtractedInfoType:
         """Create a map of video qualities and their metadata.
 
         Args:
             extracted_info (ExtractedInfo): Extracted video info (modelled)
             ext (t.Literal["webm", "mp4"], optional): Video extensions. Defaults to "webm".
+            audio_ext (t.Literal["m4a", "webm", "opus"], optional): Audio extensions. Defaults to "webm".
 
         Returns:
             dict[mediaQualities,ExtractedInfoFormat]
         """
         separated_videos = self.separate_videos_by_extension(extracted_info)
-        assert_membership(["webm", "mp4"], ext, "Extension")
+        assert_membership(videoExtensions, ext, "Extension (ext)")
+        assert_membership(audioExtensions, audio_ext, "Audio extension (audio_ext)")
         formats: list[ExtractedInfoFormat] = getattr(separated_videos, ext)
         response_items = {}
         for format in formats:
             if format.format_note and format.format_note in mediaQualities:
+                if format.resolution == "audio only" and not format.ext == audio_ext:
+                    continue
                 response_items[format.format_note] = format
 
         return t.cast(qualityExtractedInfoType, response_items)
@@ -421,6 +435,8 @@ class Download(PostDownload):
         clear_temps: bool = True,
         filename_prefix: str = "",
         audio_quality: audioQualitiesType = None,
+        default_audio_quality: audioQualitiesType = "medium",
+        default_video_quality: videoQualitiesType = "720p",
     ):
         """`Download` Constructor
 
@@ -431,11 +447,20 @@ class Download(PostDownload):
             audio_quality (str, audioQualitieType): Default audio quality to be merged with video. Defaults to None [auto].
         """
         super().__init__(clear_temps=clear_temps)
+        assert_membership(
+            audioQualities, default_audio_quality, "Default audio quality"
+        )
+        assert_membership(
+            videoQualities, default_video_quality, "Default video quality"
+        )
+
         self.yt = yt
         self.working_directory = Path(str(working_directory))
         self.clear_temps = clear_temps
         self.filename_prefix = filename_prefix
         self.audio_quality = audio_quality
+        self.default_audio_quality = default_audio_quality
+        self.default_video_quality = default_video_quality
         assert (
             self.working_directory.is_dir()
         ), f"Working directory chosen is invalid - {self.working_directory}"
@@ -491,37 +516,49 @@ class Download(PostDownload):
     def run(
         self,
         title: str,
-        quality: mediaQualitiesType,
-        quality_infoFormat: qualityExtractedInfoType,
-        audio_bitrate: audioBitratesType = "128k",
-        audio_only: bool = False,
+        qualities_format: qualityExtractedInfoType,
+        quality: mediaQualitiesType = None,
+        bitrate: audioBitratesType = "128k",
         retain_extension: bool = False,
     ) -> Path:
         """Download the media and save in disk.
 
         Args:
             title (str): Video title.
-            quality_infoFormat (qualityExtractedInfoType): Qualities mapped to their `ExtractedInfoFormats`.
-            quality (mediaQualitiesType): Quality of the media to be downloaded.
-            audio_bitrate (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
-            audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
-            retain_extension (bool, optional): Use the format's extension and not default mp4. Defaults to False.
+            qualities_format (qualityExtractedInfoType): Dictionary of qualities mapped to their `ExtractedInfoFormats`.
+            quality (mediaQualitiesType): Quality of the media to be downloaded. Defaults to "720p|medium".
+            bitrate (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
+            retain_extension (bool, optional): Use the format's extension and not default mp4 for videos. Defaults to False.
 
         Returns:
               Path: Path to the downloaded file.
         """
         assert title, "Video title cannot be null"
-        assert_membership(mediaQualities, quality, "Quality")
-        assert_membership(audioBitrates + (None,), audio_bitrate, "audio_bitrate")
         assert_type(
-            quality_infoFormat, (qualityExtractedInfoType, dict), "qualty_infoFormat"
+            qualities_format, (qualityExtractedInfoType, dict), "qualities_format"
         )
-        assert (
-            quality in quality_infoFormat
-        ), f"The video does not support the targeted quality - {quality}"
-        target_format = quality_infoFormat[quality]
         title = f"{title} {quality}"
-        if quality in videoQualities and not audio_only:
+        if quality in videoQualities:
+            if not quality:
+                quality = self.default_video_quality
+            else:
+                assert_membership(videoQualities, quality, "Video quality")
+            assert (
+                quality in qualities_format
+            ), f"The video does not support the targeted video quality - {quality}"
+            target_format = qualities_format[quality]
+            target_audio_format = qualities_format[
+                (
+                    self.audio_quality
+                    if self.audio_quality
+                    else video_audio_quality_map.get(quality, "medium")
+                )
+            ]
+
+            if target_format.ext == "webm" and target_audio_format.ext == "m4a":
+                raise IncompatibleMediaFormats(
+                    f"Cannot merge a video with 'webm' extension and an audio with 'm4a' extension."
+                )
             # Video being handled
             save_to = self.save_to(
                 title, ext=target_format.ext if retain_extension else "mp4"
@@ -539,15 +576,7 @@ class Download(PostDownload):
             self._verify_download(
                 self.yt.dl(name=video_temp, info=target_format.model_dump())
             )
-
             # Let's download audio
-            target_audio_format = quality_infoFormat[
-                (
-                    self.audio_quality
-                    if self.audio_quality
-                    else video_audio_quality_map.get(quality, "medium")
-                )
-            ]
             logger.info(
                 f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
             )
@@ -563,10 +592,17 @@ class Download(PostDownload):
             )
         elif quality in audioQualities:
             # Download the desired audio quality
-            title = f"{title} {audio_bitrate}" if audio_bitrate else title
-            save_to = self.save_to(
-                title, ext="mp3" if audio_bitrate else target_format.ext
-            )
+            assert_membership(audioBitrates + (None,), bitrate, "bitrate")
+            if not quality:
+                quality = self.default_audio_quality
+            else:
+                assert_membership(audioQualities, quality, "Audio quality")
+            assert (
+                quality in qualities_format
+            ), f"The video does not support the targeted audio quality - {quality}"
+            target_format = qualities_format[quality]
+            title = f"{title} {bitrate}" if bitrate else title
+            save_to = self.save_to(title, ext="mp3" if bitrate else target_format.ext)
             if save_to.exists():
                 # let's presume it was previously processed.
                 return save_to
@@ -578,10 +614,10 @@ class Download(PostDownload):
                 self.yt.dl(name=audio_temp, info=target_format.model_dump())
             )
             # Move audio to static
-            if audio_bitrate:
+            if bitrate:
                 # Convert to mp3
                 self.convert_audio_to_mp3_format(
-                    input=Path(audio_temp), output=save_to, bitrate=audio_bitrate
+                    input=Path(audio_temp), output=save_to, bitrate=bitrate
                 )
             else:
                 # Retain in it's format

@@ -24,13 +24,19 @@ def test_load_extracted_info_from_json_file(yb: YoutubeDLBonus):
 
 
 @pytest.mark.parametrize(
-    ["extension"],
-    [("mp4",), ("webm",)],
+    ["extension", "audio_ext"],
+    [
+        ("mp4", "webm"),
+        ("mp4", "m4a"),
+        ("webm", "webm"),
+        ("webm", "m4a"),
+    ],
 )
-def test_get_video_qualities_with_extension(yb: YoutubeDLBonus, extension):
+def test_get_video_qualities_with_extension(yb: YoutubeDLBonus, extension, audio_ext):
     extracted_data = extract_info_from_json_file(yb)
-    resp_1 = yb.get_video_qualities_with_extension(extracted_data, extension)
+    resp_1 = yb.get_video_qualities_with_extension(extracted_data, extension, audio_ext)
     assert isinstance(resp_1, dict)
+    assert resp_1.get("medium").ext == audio_ext
 
 
 @pytest.mark.parametrize(["audio_quality"], [("ultralow",), ("low",), ("medium",)])

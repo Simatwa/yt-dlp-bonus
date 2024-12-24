@@ -2,33 +2,11 @@
 
 import typing as t
 
+videoExtensionsType = t.Literal["mp4", "webm"]
+audioExtensionsType = t.Literal["m4a", "webm"]
 
-class VideoExtensions:
-    """Video's extension i.e mp4 & webm"""
-
-    mp4 = "mp4"
-    webm = "webm"
-
-
-videoQualities = (
-    "144p",
-    "240p",
-    "360p",
-    "480p",
-    "720p",
-    "1080p",
-    "1440p",
-    "2160p",
-    "720p50",
-    "1080p50",
-    "1440p50",
-    "2160p50",
-    "720p60",
-    "1080p60",
-    "1440p60",
-    "2160p60",
-)
-"""Video qualities"""
+videoExtensions: tuple[videoExtensionsType] = ("mp4", "webm")
+audioExtensions: tuple[audioExtensionsType] = ("m4a", "webm")
 
 videoQualitiesType = t.Literal[
     "144p",
@@ -49,13 +27,33 @@ videoQualitiesType = t.Literal[
     "2160p60",
 ]
 
+videoQualities: tuple[videoQualitiesType] = (
+    "144p",
+    "240p",
+    "360p",
+    "480p",
+    "720p",
+    "1080p",
+    "1440p",
+    "2160p",
+    "720p50",
+    "1080p50",
+    "1440p50",
+    "2160p50",
+    "720p60",
+    "1080p60",
+    "1440p60",
+    "2160p60",
+)
+"""Video qualities"""
+
 audioQualitiesType = t.Literal[
     "ultralow",
     "low",
     "medium",
 ]
 
-audioQualities = (
+audioQualities: tuple[audioQualitiesType] = (
     "ultralow",
     "low",
     "medium",
@@ -84,18 +82,8 @@ mediaQualitiesType = t.Literal[
     "2160p60",
 ]
 
-mediaQualities = audioQualities + videoQualities
+mediaQualities: tuple[mediaQualitiesType] = audioQualities + videoQualities
 """Both audio and video qualities"""
-
-audioBitrates = (
-    "64k",
-    "96k",
-    "128k",
-    "192k",
-    "256k",
-    "320k",
-)
-"""Audio birates"""
 
 audioBitratesType = t.Literal[
     "64k",
@@ -105,6 +93,16 @@ audioBitratesType = t.Literal[
     "256k",
     "320k",
 ]
+
+audioBitrates: tuple[audioBitratesType] = (
+    "64k",
+    "96k",
+    "128k",
+    "192k",
+    "256k",
+    "320k",
+)
+"""Audio bitrates"""
 
 video_audio_quality_map: dict[videoQualitiesType, audioQualitiesType] = {
     "144p": "ultralow",

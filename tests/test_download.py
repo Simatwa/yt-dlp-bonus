@@ -19,28 +19,36 @@ def download():
 
 
 @pytest.mark.parametrize(
-    ["quality", "extension", "bitrate", "audio_only"],
+    ["quality", "ext", "audio_ext", "bitrate", "retain_ext", "output_ext"],
     [
-        ("240p", "mp4", "128k", False),  # Download video in mp4
-        ("360p", "webm", "128k", False),  # Download video in webm
-        ("medium", "mp4", None, True),  # Download audio in m4a
-        ("low", "webm", "192k", True),  # Download audio in mp3
+        #  ("360p", "webm", "m4a", None, True, "webm"), can't merge webm & m4a
+        ("360p", "mp4", "m4a", None, True, "mp4"),
+        ("240p", "mp4", "webm", None, False, "mp4"),
+        ("360p", "webm", "webm", None, True, "webm"),
+        ("medium", "mp4", "webm", "128k", False, "mp3"),
+        ("medium", "webm", "webm", None, True, "webm"),
+        ("low", "webm", "m4a", "192k", False, "mp3"),
+        ("low", "webm", "m4a", None, True, "m4a"),
+        ("medium", "mp4", "webm", None, True, "webm"),
+        ("low", "mp4", "m4a", "192k", False, "mp3"),
+        ("low", "mp4", "m4a", None, True, "m4a"),
     ],
 )
 def test_download_audio_and_video(
-    download: Download, quality, extension, bitrate, audio_only
+    download: Download, quality, ext, audio_ext, bitrate, retain_ext, output_ext
 ):
     info_format = yb.get_video_qualities_with_extension(
-        extracted_info=extracted_info, ext=extension
+        extracted_info=extracted_info, ext=ext, audio_ext=audio_ext
     )
     saved_to: Path = download.run(
         title=extracted_info.title,
-        quality_infoFormat=info_format,
+        qualities_format=info_format,
         quality=quality,
-        audio_bitrate=bitrate,
-        audio_only=audio_only,
+        bitrate=bitrate,
+        retain_extension=retain_ext,
     )
     assert saved_to.name.startswith(filename_prefix)
     assert saved_to.exists()
     assert saved_to.is_file()
+    assert saved_to.as_posix().endswith(output_ext)
     download.clear_temp_files(saved_to)
