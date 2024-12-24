@@ -19,7 +19,7 @@ def download():
 
 
 @pytest.mark.parametrize(
-    ["quality", "extension", "bitrates", "audio_only"],
+    ["quality", "extension", "bitrate", "audio_only"],
     [
         ("240p", "mp4", "128k", False),  # Download video in mp4
         ("360p", "webm", "128k", False),  # Download video in webm
@@ -28,7 +28,7 @@ def download():
     ],
 )
 def test_download_audio_and_video(
-    download: Download, quality, extension, bitrates, audio_only
+    download: Download, quality, extension, bitrate, audio_only
 ):
     info_format = yb.get_video_qualities_with_extension(
         extracted_info=extracted_info, ext=extension
@@ -37,7 +37,7 @@ def test_download_audio_and_video(
         title=extracted_info.title,
         quality_infoFormat=info_format,
         quality=quality,
-        audio_bitrates=bitrates,
+        audio_bitrate=bitrate,
         audio_only=audio_only,
     )
     assert saved_to.name.startswith(filename_prefix)

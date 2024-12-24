@@ -36,7 +36,7 @@ from yt_dlp_bonus.exceptions import (
     UknownDownloadFailure,
 )
 
-from yt_dlp.utils import sanitize_filename
+from yt_dlp_bonus.utils import sanitize_filename
 
 qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
 
@@ -491,7 +491,7 @@ class Download(PostDownload):
         title: str,
         quality: mediaQualitiesType,
         quality_infoFormat: qualityExtractedInfoType,
-        audio_bitrates: audioBitratesType = "128k",
+        audio_bitrate: audioBitratesType = "128k",
         audio_only: bool = False,
         retain_extension: bool = False,
     ) -> Path:
@@ -501,7 +501,7 @@ class Download(PostDownload):
             title (str): Video title.
             quality_infoFormat (qualityExtractedInfoType): Qualities mapped to their `ExtractedInfoFormats`.
             quality (mediaQualitiesType): Quality of the media to be downloaded.
-            audio_bitrates (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
+            audio_bitrate (audioBitratesType, optional): Audio encoding bitrates. Make it None to retains its's initial format. Defaults to "128k".
             audio_only (bool, optional): Flag to control video or audio download. Defaults to False.
             retain_extension (bool, optional): Use the format's extension and not default mp4. Defaults to False.
 
@@ -510,7 +510,7 @@ class Download(PostDownload):
         """
         assert title, "Video title cannot be null"
         assert_membership(mediaQualities, quality, "Quality")
-        assert_membership(audioBitrates + (None,), audio_bitrates, "audio_bitrates")
+        assert_membership(audioBitrates + (None,), audio_bitrate, "audio_bitrate")
         assert_type(
             quality_infoFormat, (qualityExtractedInfoType, dict), "qualty_infoFormat"
         )
@@ -561,9 +561,9 @@ class Download(PostDownload):
             )
         elif quality in audioQualities:
             # Download the desired audio quality
-            title = f"{title} {audio_bitrates}" if audio_bitrates else title
+            title = f"{title} {audio_bitrate}" if audio_bitrate else title
             save_to = self.save_to(
-                title, ext="mp3" if audio_bitrates else target_format.ext
+                title, ext="mp3" if audio_bitrate else target_format.ext
             )
             if save_to.exists():
                 # let's presume it was previously processed.
@@ -576,10 +576,10 @@ class Download(PostDownload):
                 self.yt.dl(name=audio_temp, info=target_format.model_dump())
             )
             # Move audio to static
-            if audio_bitrates:
+            if audio_bitrate:
                 # Convert to mp3
                 self.convert_audio_to_mp3_format(
-                    input=Path(audio_temp), output=save_to, bitrate=audio_bitrates
+                    input=Path(audio_temp), output=save_to, bitrate=audio_bitrate
                 )
             else:
                 # Retain in it's format

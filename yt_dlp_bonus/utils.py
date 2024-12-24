@@ -3,10 +3,13 @@
 from typing import Sequence, Any
 import subprocess
 import logging
+import re
 from subprocess import CompletedProcess
 
 logger = logging.getLogger(__file__)
 """yt-dlp-bonus logger"""
+
+compiled_illegal_characters_pattern = re.compile(r"[^\w\-_\.\s()&|]")
 
 
 def assert_instance(obj, inst, name="Value"):
@@ -74,3 +77,8 @@ def run_system_command(command: str) -> tuple[bool, CompletedProcess | Exception
     except subprocess.CalledProcessError as e:
         # Handle error if the command returns a non-zero exit code
         return (False, e)
+
+
+def sanitize_filename(filename: str) -> str:
+    """Remove illegal characters from a filename"""
+    return re.sub(compiled_illegal_characters_pattern, "", filename)
