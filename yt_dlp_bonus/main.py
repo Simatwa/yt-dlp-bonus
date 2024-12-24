@@ -244,13 +244,13 @@ class YoutubeDLBonus(YoutubeDL):
         return VideoFormats(webm=webm_videos, mp4=mp4_videos)
 
     def get_video_qualities_with_extension(
-        self, extracted_info: ExtractedInfo, ext: t.Literal["webm", "mp4"] = "mp4"
+        self, extracted_info: ExtractedInfo, ext: t.Literal["webm", "mp4"] = "webm"
     ) -> qualityExtractedInfoType:
         """Create a map of video qualities and their metadata.
 
         Args:
             extracted_info (ExtractedInfo): Extracted video info (modelled)
-            ext (t.Literal["webm", "mp4"], optional): Video extensions. Defaults to "mp4".
+            ext (t.Literal["webm", "mp4"], optional): Video extensions. Defaults to "webm".
 
         Returns:
             dict[mediaQualities,ExtractedInfoFormat]
