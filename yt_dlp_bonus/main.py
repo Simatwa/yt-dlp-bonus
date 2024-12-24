@@ -302,17 +302,19 @@ class YoutubeDLBonus(YoutubeDL):
 class PostDownload:
     """Provides post download utilities"""
 
-    merge_audio_and_video_command_template = (
-        'ffmpeg -i "%(video_path)s" -i "%(audio_path)s" -c copy "%(output)s"'
-    )
+    merge_audio_and_video_command_template = 'ffmpeg -i "%(video_path)s" -i "%(audio_path)s" -c copy "%(output)s" -y -threads auto'
     audio_to_mp3_conversion_command_template = (
-        'ffmpeg -i "%(input)s" -b:a %(bitrate)s "%(output)s"'
+        'ffmpeg -i "%(input)s" -b:a %(bitrate)s "%(output)s" -y -threads auto'
     )
 
     def __init__(self, clear_temps: bool = False):
+        """Constructor for `PostDownload`
+
+        Args:
+            clear_temps (bool, optional): Delete temporary files. Defaults to False.
+        """
         self.clear_temps: bool = clear_temps
         self.temp_dir: Path = None
-        """Flag for controlling delition of temporary files"""
 
     def __enter__(self) -> "PostDownload":
         return self
