@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="yt-dlp-bonus",
-    version="0.1.2",
+    version="0.1.3",
     license="The Unlicense",
     author="Smartwa",
     maintainer="Smartwa",
