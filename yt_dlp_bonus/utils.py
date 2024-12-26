@@ -10,6 +10,10 @@ logger = logging.getLogger(__file__)
 """yt-dlp-bonus logger"""
 
 compiled_illegal_characters_pattern = re.compile(r"[^\w\-_\.\s()&|]")
+"""Used to get rid of illegal characters in a filename"""
+
+compiled_download_url_ip_pattern = re.compile(r"ip=[\w\W][^&]+")
+"""Used for locating ip={ip} in download url"""
 
 
 def assert_instance(obj, inst, name="Value"):
@@ -34,8 +38,8 @@ def assert_membership(elements: Sequence, member: Any, name="Value"):
     assert member in elements, f"{name} '{member}' is not one of {elements}"
 
 
-def get_size_in_mb_from_bytes(size_in_bytes: int) -> str:
-    """Convert size in bytes to mb
+def get_size_string(size_in_bytes: int) -> str:
+    """Convert size from bytes to GB, MB and KB accordingly.
 
     Args:
         size_in_bytes (int)
@@ -47,9 +51,12 @@ def get_size_in_mb_from_bytes(size_in_bytes: int) -> str:
         if size_in_bytes >= 1_000_000_000:
             size_in_gb = size_in_bytes / 1_000_000_000
             return str(round(size_in_gb, 2)) + " GB"
-        else:
+        elif size_in_bytes >= 1_000_000:
             size_in_mb = size_in_bytes / 1_000_000
             return str(round(size_in_mb, 2)) + " MB"
+        else:
+            size_in_kb = size_in_bytes / 1_000
+            return str(round(size_in_kb, 2)) + " KB"
     else:
         return "[Unknown] Mb"
 
