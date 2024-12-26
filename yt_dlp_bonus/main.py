@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import typing as t
 from uuid import uuid4
@@ -31,8 +32,9 @@ from yt_dlp_bonus.utils import (
     assert_instance,
     assert_type,
     assert_membership,
-    get_size_in_mb_from_bytes,
+    get_size_string,
     run_system_command,
+    compiled_download_url_ip_pattern,
 )
 from yt_dlp_bonus.exceptions import (
     UserInputError,
@@ -70,20 +72,33 @@ protocol_informat_map = {
 class YoutubeDLBonus(YoutubeDL):
     """An extension class of YoutubeDL which pydantically models search results and manipulate them."""
 
-    def __init__(self, params: dict = {}, auto_init: bool = True):
+    def __init__(
+        self, params: dict = {}, auto_init: bool = True, download_ip: str = None
+    ):
         """`YoutubeDLBonus` Constructor
 
         Args:
             params (dict, optional): YoutubeDL options. Defaults to {}.
             auto_init (optional, bool): Whether to load the default extractors and print header (if verbose).
                             Set to 'no_verbose_header' to not print the header. Defaults to True.
+            download_ip (optional, str): IP address to be used on the media download url parameter. Defaults to None.
         """
         params.setdefault("noplaylist", True)
         super().__init__(params, auto_init)
+        self.download_ip = download_ip
 
     def __enter__(self) -> "YoutubeDLBonus":
         self.save_console_title()
         return self
+
+    def _update_download_url(self, format: ExtractedInfoFormat) -> ExtractedInfoFormat:
+        """Updates ip address in download url"""
+        if self.download_ip:
+            new_url = re.sub(
+                compiled_download_url_ip_pattern, f"ip={self.download_ip}", format.url
+            )
+            format.url = new_url
+        return format
 
     def get_format_quality(
         self, info_format: ExtractedInfoFormat
@@ -112,7 +127,7 @@ class YoutubeDLBonus(YoutubeDL):
     def process_extracted_info(
         self, extracted_info: ExtractedInfo, filter_best_protocol: bool = True
     ) -> ExtractedInfo:
-        """Updates https chunk size to formats and filter best protocol.
+        """Updates https chunk size to formats, filter best protocol and update ip param in download url.
 
         Args:
             extracted_info (ExtractedInfo)
@@ -121,12 +136,14 @@ class YoutubeDLBonus(YoutubeDL):
         Returns:
             ExtractedInfo: Processed ExtractedInfo
         """
+        assert_instance(extracted_info, ExtractedInfo, "extracted_info")
         sorted_formats = []
         target_format_protocol = protocol_informat_map.get(
             extracted_info.protocol, "https"
         )
         # print(data["protocol"], target_format_protocol)
         for format in extracted_info.formats:
+            format = self._update_download_url(format)
             if filter_best_protocol:
                 if format.protocol == target_format_protocol:
                     # print(target_format_protocol, format.protocol)
@@ -506,7 +523,7 @@ class Download(PostDownload):
             if min_filesize or max_filesize:
                 raise FileSizeOutOfRange(
                     "The file-size of the requested quality is out of downloadable "
-                    f"range ({get_size_in_mb_from_bytes(min_filesize)} - {get_size_in_mb_from_bytes(max_filesize)})."
+                    f"range ({get_size_string(min_filesize)} - {get_size_string(max_filesize)})."
                 )
             raise UknownDownloadFailure(
                 f"File of the requested quality could not be downloaded due to unknown reasons. "
@@ -569,7 +586,7 @@ class Download(PostDownload):
 
             # Need to download both audio and video and then merge
             logger.info(
-                f"Downloading video - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
+                f"Downloading video - {title} ({target_format.resolution}) [{get_size_string(target_format.filesize_approx)}]"
             )
             # Let's download video
             video_temp = f"temp_{str(uuid4())}.{target_format.ext}"
@@ -578,7 +595,7 @@ class Download(PostDownload):
             )
             # Let's download audio
             logger.info(
-                f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_in_mb_from_bytes(target_audio_format.filesize_approx)}]"
+                f"Downloading audio - {title} ({target_audio_format.resolution}) [{get_size_string(target_audio_format.filesize_approx)}]"
             )
             audio_temp = f"temp_{str(uuid4())}.{target_audio_format.ext}"
             self._verify_download(
@@ -607,7 +624,7 @@ class Download(PostDownload):
                 # let's presume it was previously processed.
                 return save_to
             logger.info(
-                f"Downloading audio - {title} ({target_format.resolution}) [{get_size_in_mb_from_bytes(target_format.filesize_approx)}]"
+                f"Downloading audio - {title} ({target_format.resolution}) [{get_size_string(target_format.filesize_approx)}]"
             )
             audio_temp = f"temp_{str(uuid4())}.{target_format.ext}"
             self._verify_download(
