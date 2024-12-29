@@ -150,9 +150,9 @@ class ExtractedInfo(BaseModel):
     stretched_ratio: Any = None
     aspect_ratio: Optional[float] = None
     acodec: Optional[str] = None
-    abr: float
-    asr: float
-    audio_channels: int
+    abr: Optional[float] = 0
+    asr: Optional[float] = 0
+    audio_channels: Optional[int] = 0
 
 
 class SearchExtractedInfo(BaseModel):
