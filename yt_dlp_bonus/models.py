@@ -104,7 +104,7 @@ class ExtractedInfo(BaseModel):
     comment_count: Optional[int] = None
     chapters: Optional[Any] = None
     heatmap: Optional[list[ExtractedInfoHeatmap]] = None
-    like_count: int
+    like_count: Optional[int] = None
     channel: str = Field(description="Channel name")
     channel_follower_count: int
     channel_is_verified: bool = False
@@ -138,7 +138,7 @@ class ExtractedInfo(BaseModel):
     protocol: str
     language: Optional[str] = None
     format_note: Optional[str] = None
-    filesize_approx: int
+    filesize_approx: Optional[int] = 0
     tbr: float
     width: int
     height: int
