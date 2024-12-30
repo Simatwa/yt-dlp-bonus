@@ -588,6 +588,11 @@ class Download(PostDownload):
             qualities_format, (qualityExtractedInfoType, dict), "qualities_format"
         )
         title = f"{title} {quality}"
+        sample_info_format = qualities_format.get(list(qualities_format.keys())[0])
+        if sample_info_format.audio_video_size == 0:
+            qualities_format = self.yt.update_audio_video_size(
+                qualities_format, self.default_audio_quality
+            )
         if quality in videoQualities:
             if not quality:
                 quality = self.default_video_quality
