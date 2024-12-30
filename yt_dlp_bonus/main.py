@@ -111,7 +111,7 @@ class YoutubeDLBonus(YoutubeDL):
         Returns:
             mediaQualitiesType: Format quality
         """
-        assert_instance(info_format, ExtractedInfoFormat)
+        assert_instance(info_format, ExtractedInfoFormat, "info_format")
 
         if info_format.format_note:
             if info_format.format_note in mediaQualities:
@@ -454,6 +454,8 @@ class Download(PostDownload):
         audio_quality: audioQualitiesType = None,
         default_audio_quality: audioQualitiesType = "medium",
         default_video_quality: videoQualitiesType = "720p",
+        min_filesize: int = None,
+        max_filesize: int = None,
     ):
         """`Download` Constructor
 
@@ -462,6 +464,8 @@ class Download(PostDownload):
             clear_temps (bool, optional): Flag for clearing temporary files after download. Defaults to True.
             filename_prefix (str, optional): Downloaded filename prefix. Defaults to "".
             audio_quality (str, audioQualitieType): Default audio quality to be merged with video. Defaults to None [auto].
+            min_filesize(int, Optional): Minimum downloadable filesize (bytes). Defaults to ytdl.param's min_filesize.
+            max_filesize(int, Optional): Maximum downloadable filesize (bytes). Defaults to ytdl.param's max_filesize.
         """
         super().__init__(clear_temps=clear_temps)
         assert_membership(
@@ -483,6 +487,11 @@ class Download(PostDownload):
         ), f"Working directory chosen is invalid - {self.working_directory}"
         self.temp_dir = self.working_directory.joinpath("temps")
         os.makedirs(self.temp_dir, exist_ok=True)
+
+        self.minimum_filesize = (min_filesize or yt.params.get("min_filesize")) or 0
+        self.maximum_filesize = (
+            max_filesize or yt.params.get("max_filesize")
+        ) or 1_073_741_824
 
     def __enter__(self) -> "Download":
         return self
@@ -530,6 +539,30 @@ class Download(PostDownload):
                 "Try downloading other smaller qualities."
             )
 
+    def assert_is_downloadable(
+        self, info_format: ExtractedInfoFormat
+    ) -> ExtractedInfoFormat:
+        """Checks if the file is within downloadable range or raise FileSizeOutOfRange exception
+
+        Args:
+            info_format (ExtractedInfoFormat)
+
+        Returns:
+            ExtractedInfoFormat
+        """
+        assert_instance(info_format, ExtractedInfoFormat, "info_format")
+        if info_format.audio_video_size > self.maximum_filesize:
+            raise FileSizeOutOfRange(
+                "The file-size of the requested quality is greater than the maximum "
+                f"downloadable size ({get_size_string(self.maximum_filesize)})"
+            )
+        elif info_format.audio_video_size < self.minimum_filesize:
+            raise FileSizeOutOfRange(
+                "The file-size of the requested quality is lesser than the minimum "
+                f"downloadable size ({get_size_string(self.minimum_filesize)})"
+            )
+        return info_format
+
     def run(
         self,
         title: str,
@@ -563,14 +596,16 @@ class Download(PostDownload):
             assert (
                 quality in qualities_format
             ), f"The video does not support the targeted video quality - {quality}"
-            target_format = qualities_format[quality]
-            target_audio_format = qualities_format[
-                (
-                    self.audio_quality
-                    if self.audio_quality
-                    else video_audio_quality_map.get(quality, "medium")
-                )
-            ]
+            target_format = self.assert_is_downloadable(qualities_format[quality])
+            target_audio_format = self.assert_is_downloadable(
+                qualities_format[
+                    (
+                        self.audio_quality
+                        if self.audio_quality
+                        else video_audio_quality_map.get(quality, "medium")
+                    )
+                ]
+            )
 
             if target_format.ext == "webm" and target_audio_format.ext == "m4a":
                 raise IncompatibleMediaFormats(
@@ -617,7 +652,7 @@ class Download(PostDownload):
             assert (
                 quality in qualities_format
             ), f"The video does not support the targeted audio quality - {quality}"
-            target_format = qualities_format[quality]
+            target_format = self.assert_is_downloadable(qualities_format[quality])
             title = f"{title} {bitrate}" if bitrate else title
             save_to = self.save_to(title, ext="mp3" if bitrate else target_format.ext)
             if save_to.exists():
