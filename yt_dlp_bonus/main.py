@@ -317,7 +317,18 @@ class YoutubeDLBonus(YoutubeDL):
             "quality_extracted_info",
         )
         assert_type(audio_quality, (audioQualitiesType, str), "audio_quality")
-        chosen_audio_format = quality_extracted_info[audio_quality]
+        try:
+            chosen_audio_format = (
+                quality_extracted_info.get(audio_quality)
+                or quality_extracted_info.get("medium")
+                or quality_extracted_info.get("low")
+                or quality_extracted_info["ultralow"]
+            )
+        except KeyError:
+            raise RuntimeError(
+                "Failed to get any audio quality for estimating total video size"
+            ) from KeyError
+
         for quality, format in quality_extracted_info.items():
             if quality in videoQualities:
                 format.audio_video_size = (
