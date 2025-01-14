@@ -93,7 +93,7 @@ class ExtractedInfo(BaseModel):
     average_rating: Optional[Any] = None
     age_limit: int
     webpage_url: str
-    categories: list[str]
+    categories: Optional[list[str]] = []
     tags: list[str]
     playable_in_embed: bool
     live_status: str
@@ -112,8 +112,8 @@ class ExtractedInfo(BaseModel):
     uploader_id: Optional[str] = None
     uploader_url: Optional[str] = None
     upload_date: datetime
-    timestamp: int
-    availability: Literal["public", "private"]
+    timestamp: Optional[int] = None
+    availability: Optional[Literal["public", "private"]] = None
     original_url: str
     webpage_url_basename: str
     webpage_url_domain: str
