@@ -2,13 +2,13 @@
 
 import typing as t
 
-videoExtensionsType = t.Literal["mp4", "webm"]
-audioExtensionsType = t.Literal["m4a", "webm"]
+videoExtensionsType: t.TypeAlias = t.Literal["mp4", "webm"]
+audioExtensionsType: t.TypeAlias = t.Literal["m4a", "webm"]
 
 videoExtensions: tuple[videoExtensionsType] = ("mp4", "webm")
 audioExtensions: tuple[audioExtensionsType] = ("m4a", "webm")
 
-videoQualitiesType = t.Literal[
+videoQualitiesType: t.TypeAlias = t.Literal[
     "144p",
     "240p",
     "360p",
@@ -47,7 +47,7 @@ videoQualities: tuple[videoQualitiesType] = (
 )
 """Video qualities"""
 
-audioQualitiesType = t.Literal[
+audioQualitiesType: t.TypeAlias = t.Literal[
     "ultralow",
     "low",
     "medium",
@@ -60,7 +60,7 @@ audioQualities: tuple[audioQualitiesType] = (
 )
 """Audio qualities"""
 
-mediaQualitiesType = t.Literal[
+mediaQualitiesType: t.TypeAlias = t.Literal[
     "ultralow",
     "low",
     "medium",
@@ -85,7 +85,7 @@ mediaQualitiesType = t.Literal[
 mediaQualities: tuple[mediaQualitiesType] = audioQualities + videoQualities
 """Both audio and video qualities"""
 
-audioBitratesType = t.Literal[
+audioBitratesType: t.TypeAlias = t.Literal[
     "64k",
     "96k",
     "128k",

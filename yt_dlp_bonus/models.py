@@ -4,7 +4,6 @@ Model for extracted video info
 
 from pydantic import BaseModel, Field
 from typing import Optional, Any, Literal
-from datetime import datetime
 
 
 class ExtractedInfoFormatFragments(BaseModel):
@@ -19,7 +18,7 @@ class ExtractedInfoFormat(BaseModel):
     format_id: str
     format_note: Optional[str] = None
     ext: str
-    protocol: str
+    protocol: Optional[str] = None
     acodec: Optional[str] = None
     vcodec: str
     url: Optional[str] = None
@@ -29,16 +28,16 @@ class ExtractedInfoFormat(BaseModel):
     rows: Optional[int] = None
     columns: Optional[int] = None
     fragments: Optional[list[ExtractedInfoFormatFragments]] = None
-    audio_ext: str
-    video_ext: str
+    audio_ext: Optional[str] = None
+    video_ext: Optional[str] = None
     vbr: Optional[float] = None
     abr: Optional[float] = None
     tbr: Optional[Any] = None  # To be checked
-    resolution: str
+    resolution: Optional[str] = None
     aspect_ratio: Optional[float] = None
     filesize_approx: Optional[int] = 0
-    http_headers: dict[str, str]
-    format: str
+    http_headers: dict[str, str] = {}
+    format: Optional[str] = None
     audio_video_size: Optional[int] = 0
     downloader_options: Optional[DownloaderOptions] = DownloaderOptions()
 
@@ -46,7 +45,7 @@ class ExtractedInfoFormat(BaseModel):
 class ExtractedInfoThumbnail(BaseModel):
     url: str
     preference: int
-    id: int
+    id: Optional[int] = None
 
 
 class ExtractedInfoAutomaticCaptions(BaseModel):
@@ -111,7 +110,7 @@ class ExtractedInfo(BaseModel):
     uploader: str
     uploader_id: Optional[str] = None
     uploader_url: Optional[str] = None
-    upload_date: datetime
+    upload_date: Optional[str] = None
     timestamp: Optional[int] = None
     availability: Optional[Literal["public", "private"]] = None
     original_url: str
@@ -121,38 +120,38 @@ class ExtractedInfo(BaseModel):
     extractor_key: str
     playlist: Any = None
     playlist_index: Any = None
-    display_id: str
-    fulltitle: str = Field(description="Video title as it appears on YouTube")
-    duration_string: str
+    display_id: Optional[str] = None
+    fulltitle: Optional[str] = None
+    duration_string: Optional[str] = None
     release_year: Optional[int] = None
-    is_live: bool
-    was_live: bool
+    is_live: Optional[bool] = None
+    was_live: Optional[bool] = None
     requested_subtitles: Any = None
     # has_drm: Any = Field(None, alias="_has_drm")
-    epoch: int
-    requested_formats: list[ExtractedInfoRequestedFormats]
+    epoch: Optional[int] = None
+    requested_formats: Optional[list[ExtractedInfoRequestedFormats]] = None
     # Others
-    format: str
-    format_id: str
-    ext: str
-    protocol: str
+    format: Optional[str] = None
+    format_id: Optional[str] = None
+    ext: Optional[str] = None
+    protocol: Optional[str] = None
     language: Optional[str] = None
     format_note: Optional[str] = None
     filesize_approx: Optional[int] = 0
-    tbr: float
-    width: int
-    height: int
-    resolution: str
-    fps: int
+    tbr: Optional[float] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    resolution: Optional[str] = None
+    fps: Optional[int] = None
     dynamic_range: Optional[str] = None
-    vcodec: str
-    vbr: float
+    vcodec: Optional[str] = None
+    vbr: Optional[float] = None
     stretched_ratio: Any = None
     aspect_ratio: Optional[float] = None
     acodec: Optional[str] = None
-    abr: Optional[float] = 0
-    asr: Optional[float] = 0
-    audio_channels: Optional[int] = 0
+    abr: Optional[float] = None
+    asr: Optional[float] = None
+    audio_channels: Optional[int] = None
 
 
 class SearchExtractedInfo(BaseModel):

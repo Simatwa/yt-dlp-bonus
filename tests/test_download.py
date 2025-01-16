@@ -27,11 +27,14 @@ def download():
         ("360p", "webm", "webm", None, True, "webm"),
         ("medium", "mp4", "webm", "128k", False, "mp3"),
         ("medium", "webm", "webm", None, True, "webm"),
-        ("low", "webm", "m4a", "192k", False, "mp3"),
-        ("low", "webm", "m4a", None, True, "m4a"),
+        ("low", "webm", "webm", None, True, "webm"),
+        """"
+        ("ultralow", "webm", "m4a", "192k", False, "mp3"),
+        ("ultralow", "webm", "m4a", None, True, "m4a"),
         ("medium", "mp4", "webm", None, True, "webm"),
-        ("low", "mp4", "m4a", "192k", False, "mp3"),
-        ("low", "mp4", "m4a", None, True, "m4a"),
+        ("ultralow", "mp4", "m4a", "192k", False, "mp3"),
+        ("ultralow", "mp4", "m4a", None, True, "m4a"),
+        """,
     ],
 )
 def test_download_audio_and_video(

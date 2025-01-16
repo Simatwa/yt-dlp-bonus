@@ -47,7 +47,7 @@ from yt_dlp_bonus.utils import sanitize_filename
 
 qualityExtractedInfoType = dict[mediaQualitiesType, ExtractedInfoFormat]
 
-height_quality_map: dict[int | None, mediaQualitiesType] = {
+height_quality_map: dict[int | None, videoQualitiesType] = {
     144: "144p",
     240: "240p",
     360: "360p",
@@ -59,6 +59,18 @@ height_quality_map: dict[int | None, mediaQualitiesType] = {
     None: "medium",
 }
 """Maps the ExtractedInfoFormat.height to the video quality"""
+
+_height_quality_map = height_quality_map.copy()
+
+_height_quality_map.pop(None)
+
+quality_height_map: dict[videoQualitiesType, int] = dict(
+    zip(_height_quality_map.values(), _height_quality_map.keys())
+)
+
+quality_height_map.update({"2k": 1350, "4k": 2026})
+
+"""Maps video quality to it's respective video height"""
 
 protocol_informat_map = {
     "m3u8_native": "m3u8_native",
@@ -165,34 +177,50 @@ class YoutubeDLBonus(YoutubeDL):
         return extracted_info
 
     def model_extracted_info(
-        self, data: dict, filter_best_protocol: bool = True
+        self,
+        data: dict,
+        filter_best_protocol: bool = True,
+        drop_requested_formats=False,
     ) -> ExtractedInfo:
         """Generate a model for the extracted video info.
 
         Args:
             data (dict): Extracted video info.
             filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
+            drop_requested_formats (bool, optional): Drop requested formats. Ideal for use with ytdlp methods. Defaults to False.
 
         Returns:
             ExtractedInfo: Modelled video info
         """
         extracted_info = ExtractedInfo(**data)
+        if drop_requested_formats:
+            extracted_info.requested_formats = None
+            extracted_info.requested_subtitles = None
+
         return self.process_extracted_info(extracted_info, filter_best_protocol)
 
     def extract_info_and_form_model(
-        self, url: str, filter_best_protocol: bool = True
+        self,
+        url: str,
+        filter_best_protocol: bool = True,
+        process=True,
+        drop_requested_formats=False,
     ) -> ExtractedInfo:
         """Exract info for a particular url and model the response.
 
         Args:
             url (str): Youtube video url
             filter_best_protocol (optional, bool): Retain only formats that can be downloaded faster. Defaults to True.
+            process (bool, optional): Process the extracted info. Defaults to True.
+            drop_requested_formats (bool, optional): Drop requested formats. Ideal for use with ytdlp methods. Defaults to False.
 
         Returns:
             ExtractedInfo: Modelled video info
         """
-        extracted_info = self.extract_info(url, download=False)
-        return self.model_extracted_info(extracted_info, filter_best_protocol)
+        extracted_info = self.extract_info(url, download=False, process=process)
+        return self.model_extracted_info(
+            extracted_info, filter_best_protocol, drop_requested_formats
+        )
 
     def search_and_form_model(
         self, query: str, limit: int = 5, filter_best_protocol: bool = True
@@ -223,7 +251,7 @@ class YoutubeDLBonus(YoutubeDL):
         return modelled_search_extracted_info
 
     def load_extracted_info_from_json_file(
-        self, to_json_path: Path | str
+        self, to_json_path: Path | str, **kwargs
     ) -> ExtractedInfo:
         """Read extracted video info from .json and return it's modelled version
 
@@ -235,7 +263,7 @@ class YoutubeDLBonus(YoutubeDL):
         """
         with open(to_json_path) as fh:
             data = json.load(fh)
-        return self.model_extracted_info(data)
+        return self.model_extracted_info(data, **kwargs)
 
     def separate_videos_by_extension(
         self, extracted_info: ExtractedInfo
@@ -455,6 +483,9 @@ class PostDownload:
 
 class Download(PostDownload):
     """Download audios and videos"""
+
+    video_output_ext = ["mkv", "webm", "mp4"]
+    audio_format_ext = ["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"]
 
     def __init__(
         self,
@@ -696,3 +727,92 @@ class Download(PostDownload):
                 f"The targeted format and quality mismatched - {quality}"
             )
         return save_to
+
+    def _get_updated_ytdl_params(
+        self, update: dict, progress_hooks: list[t.Callable]
+    ) -> dict:
+        params = self.yt.params.copy()
+        if (
+            params.get("outtmpl", {}).get("default", "%(title)s [%(id)s].%(ext)s")
+            == "%(title)s [%(id)s].%(ext)s"
+        ):
+            params["outtmpl"]["default"] = "%(title)s (%(format_note)s).%(ext)s"
+        update["progress_hooks"] = params.get("progress_hooks", []) + progress_hooks
+        params.update(update)
+        return params
+
+    def ydl_run(
+        self,
+        extracted_info: ExtractedInfo,
+        video_format: t.Union[videoQualitiesType, str] = "bestvideo",
+        audio_format: t.Union[
+            t.Literal["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"], str
+        ] = "bestaudio",
+        default_format: str = "best",
+        output_ext: t.Literal["mkv", "webm", "mp4"] = None,
+        progress_hooks: list[t.Callable] = [],
+    ) -> dict:
+        """
+        Run the video download process using yt-dlp with specified formats and options.
+        Args:
+            extracted_info (ExtractedInfo): The extracted information about the video.
+            video_format (t.Union[videoQualitiesType, str], optional): The desired video format. format_id etc are accepted. Defaults to "bestvideo".
+            audio_format (t.Union[t.Literal['aac', 'opus', 'mp3', 'flac', 'vorbis'], str], optional): The desired audio format. format_id etc are accepted. Defaults to "bestaudio".
+            default_format (str, Optional) Default format to be used as fallback incase both video_format and audio_format are None. Defaults to "best".
+            output_ext (t.Literal["mkv", "webm", "mp4"], Optional): The desired output file extension. Defaults to None (default).
+            progress_hooks (list[t.Callable], Optional): Functions that get called on download progress, with a dictionary with the entries. Defaults to [].
+        returns:
+            dict: A dictionary containing the result of the download process.
+
+        """
+        assert_instance(extracted_info, ExtractedInfo, "extracted_info")
+        extracted_info.requested_formats = None
+        if video_format and str(video_format) in quality_height_map.keys():
+            video_format = f"bestvideo[height={quality_height_map[video_format]}]"
+
+        if video_format and audio_format:
+            format = f"{video_format}+{audio_format}"
+        elif video_format:
+            format = f"{video_format}"
+        elif audio_format:
+            format = f"{audio_format}"
+        else:
+            format = default_format
+
+        pre_params = {
+            "format": format,
+        }
+        if output_ext is not None:
+            pre_params["merge_output_format"] = output_ext
+
+        params = self._get_updated_ytdl_params(
+            pre_params,
+            progress_hooks,
+        )
+        ytdl = YoutubeDL(params)
+        info_dict = extracted_info.model_dump()
+        return ytdl.process_video_result(info_dict, download=True)
+
+    def ydl_run_audio(
+        self,
+        extracted_info: ExtractedInfo,
+        bitrate: audioBitratesType = "128k",
+        **kwargs,
+    ) -> dict:
+        """Download `audio only` shortcut for `.ydl_run`. Convert to `mp3` on demand.
+        extracted_info (ExtractedInfo) The extracted information about the video.
+        bitrate (audioBitratesType, Optional): Mp3 conversion bitrate. Set None to retain in its original extension. Defaults to 128k.
+        """
+        kwargs["video_format"] = None
+        kwargs.setdefault("audio_format", "bestaudio")
+
+        processed_info = self.ydl_run(extracted_info, **kwargs)
+        if bitrate:
+            assert_membership(audioBitrates, bitrate, "bitrate")
+            saved_to = Path(processed_info["requested_downloads"][0]["filepath"])
+            root, ext = os.path.splitext(saved_to)
+            mp3_saved_to = self.convert_audio_to_mp3_format(
+                saved_to, root + f"+{bitrate}" + ".mp3", bitrate
+            )
+            processed_info["filepath"] = mp3_saved_to.as_posix()
+        return processed_info
