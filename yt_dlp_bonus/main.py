@@ -840,7 +840,7 @@ class Downloader(PostDownload):
         Returns:
             A dictionary containing the results of the video download and processing.
         """
-        assert_membership(audioBitrates, bitrate, "bitrate")
+        assert_membership(audioBitrates + (None,), bitrate, "bitrate")
         kwargs["video_format"] = None
         kwargs["output_ext"] = None
         kwargs.setdefault("audio_format", "bestaudio")
