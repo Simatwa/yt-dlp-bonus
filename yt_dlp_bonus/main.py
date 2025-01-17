@@ -2,6 +2,7 @@ import json
 import os
 import re
 import shutil
+import warnings
 import typing as t
 from uuid import uuid4
 from pathlib import Path
@@ -351,16 +352,20 @@ class YoutubeDLBonus(YoutubeDL):
                 or quality_extracted_info.get("low")
                 or quality_extracted_info["ultralow"]
             )
+            filesize_approx = chosen_audio_format.filesize_approx
         except KeyError:
-            raise RuntimeError(
-                "Failed to get any audio quality for estimating total video size"
-            ) from KeyError
+            warnings.warn(
+                (
+                    "Failed to get any audio quality for estimating total video size. "
+                    "Audio filesize approximation will be 0."
+                ),
+                UserWarning,
+            )
+            filesize_approx = 0
 
         for quality, format in quality_extracted_info.items():
             if quality in videoQualities:
-                format.audio_video_size = (
-                    format.filesize_approx + chosen_audio_format.filesize_approx
-                )
+                format.audio_video_size = format.filesize_approx + filesize_approx
             else:
                 format.audio_video_size = format.filesize_approx
             quality_extracted_info[quality] = format
