@@ -3,7 +3,7 @@
 PYTHON := python3
 PIP := $(PYTHON) -m pip
 
-default: install
+default: install test clear
 
 # Target to install dependencies
 install-deps:
