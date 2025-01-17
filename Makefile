@@ -1,4 +1,4 @@
-.PHONY: install install-deps test
+.PHONY: install install-deps test clear
 
 PYTHON := python3
 PIP := $(PYTHON) -m pip
@@ -16,3 +16,6 @@ install:
 # Target to test RestAPI V1
 test:
 	$(PYTHON) -m pytest tests/test_*.py -xv
+
+clear:
+	rm *.mp4 *.webm *.mkv *.m4a *.part *.opus *.ytdl

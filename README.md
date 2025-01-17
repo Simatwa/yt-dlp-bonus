@@ -10,7 +10,7 @@
 <a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com/Simatwa/yt-dlp-bonus"/></a>
 </p>
 
-This library does a simple yet the Lord's work; extends [yt-dlp](https://github.com/yt-dlp/yt-dlp) *(YoutubeDL)* and adds modelling support to the extracted YouTube info using [pydantic](https://github.com/pydantic/pydantic).
+This library does a simple yet the Lord's work; extends [yt-dlp](https://github.com/yt-dlp/yt-dlp) *(YoutubeDL)* and adds modelling support to the extracted YoutubeDL results using [pydantic](https://github.com/pydantic/pydantic).
 
 ## Installation
 
@@ -53,10 +53,7 @@ print(search_results)
 </summary>
 
 ```python
-import logging
-from yt_dlp_bonus import YoutubeDLBonus, Download
-
-logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
+from yt_dlp_bonus import YoutubeDLBonus, Downloader
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
@@ -64,15 +61,10 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_video_qualities_with_extension(
-    extracted_info=extracted_info
+downloader = Downloader(yt=yt_bonus)
+downloader.ydl_run(
+    extracted_info, video_format="480p"
 )
-
-download = Download(yt=yt_bonus)
-download.run(
-    title=extracted_info.title, quality="480p", quality_infoFormat=quality_formats
-)
-
 ```
 
 </details>
@@ -85,10 +77,7 @@ download.run(
 </summary>
 
 ```python
-import logging
-from yt_dlp_bonus import YoutubeDLBonus, Download
-
-logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
+from yt_dlp_bonus import YoutubeDLBonus, Downloader
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
@@ -96,21 +85,19 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_video_qualities_with_extension(
-    extracted_info=extracted_info
-)
+downloader = Downloader(yt=yt_bonus)
 
-download = Download(yt=yt_bonus)
-download.run(
-    title=extracted_info.title, quality="medium", quality_infoFormat=quality_formats
-)
+downloader.default_audio_extension_for_sorting = "m4a"
 
+downloader.ydl_run(
+    extracted_info, video_format=None, audio_format="medium"
+)
 ```
 
 </details>
 
 > [!NOTE]
-> Incase requests are detected as coming from bot then consider using a proxy from **Canada**, **USA** or any other country that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
+> Incase requests are detected as coming from bot then consider using a proxy from **Canada**, **USA** or any other location that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
 
 # License
 

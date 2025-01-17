@@ -67,7 +67,6 @@ _height_quality_map.pop(None)
 quality_height_map: dict[videoQualitiesType, int] = dict(
     zip(_height_quality_map.values(), _height_quality_map.keys())
 )
-
 quality_height_map.update({"2k": 1350, "4k": 2026})
 
 """Maps video quality to it's respective video height"""
@@ -82,7 +81,7 @@ protocol_informat_map = {
 
 
 class YoutubeDLBonus(YoutubeDL):
-    """An extension class of YoutubeDL which pydantically models search results and manipulate them."""
+    """An extension class of YoutubeDL which pydantically models url & search results and manipulate them."""
 
     def __init__(
         self, params: dict = {}, auto_init: bool = True, download_ip: str = None
@@ -481,11 +480,15 @@ class PostDownload:
         return Path(str(output))
 
 
-class Download(PostDownload):
+class Downloader(PostDownload):
     """Download audios and videos"""
 
     video_output_ext = ["mkv", "webm", "mp4"]
     audio_format_ext = ["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"]
+    default_ydl_output_format = "%(title)s (%(format_note)s).%(ext)s"
+
+    default_video_extension_for_sorting: videoExtensionsType = "webm"
+    default_audio_extension_for_sorting: audioExtensionsType = "webm"
 
     def __init__(
         self,
@@ -736,7 +739,7 @@ class Download(PostDownload):
             params.get("outtmpl", {}).get("default", "%(title)s [%(id)s].%(ext)s")
             == "%(title)s [%(id)s].%(ext)s"
         ):
-            params["outtmpl"]["default"] = "%(title)s (%(format_note)s).%(ext)s"
+            params["outtmpl"]["default"] = self.default_ydl_output_format
         update["progress_hooks"] = params.get("progress_hooks", []) + progress_hooks
         params.update(update)
         return params
@@ -746,7 +749,9 @@ class Download(PostDownload):
         extracted_info: ExtractedInfo,
         video_format: t.Union[videoQualitiesType, str] = "bestvideo",
         audio_format: t.Union[
-            t.Literal["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"], str
+            t.Literal["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"],
+            str,
+            audioQualitiesType,
         ] = "bestaudio",
         default_format: str = "best",
         output_ext: t.Literal["mkv", "webm", "mp4"] = None,
@@ -757,7 +762,7 @@ class Download(PostDownload):
         Args:
             extracted_info (ExtractedInfo): The extracted information about the video.
             video_format (t.Union[videoQualitiesType, str], optional): The desired video format. format_id etc are accepted. Defaults to "bestvideo".
-            audio_format (t.Union[t.Literal['aac', 'opus', 'mp3', 'flac', 'vorbis'], str], optional): The desired audio format. format_id etc are accepted. Defaults to "bestaudio".
+            audio_format (t.Union[t.Literal['aac', 'opus', 'mp3', 'flac', 'vorbis'], str, audioQualitiesType], optional): The desired audio format. format_id etc are accepted. Defaults to "bestaudio".
             default_format (str, Optional) Default format to be used as fallback incase both video_format and audio_format are None. Defaults to "best".
             output_ext (t.Literal["mkv", "webm", "mp4"], Optional): The desired output file extension. Defaults to None (default).
             progress_hooks (list[t.Callable], Optional): Functions that get called on download progress, with a dictionary with the entries. Defaults to [].
@@ -770,14 +775,33 @@ class Download(PostDownload):
         if video_format and str(video_format) in quality_height_map.keys():
             video_format = f"bestvideo[height={quality_height_map[video_format]}]"
 
+        if audio_format and str(audio_format) in audioQualities:
+            format_ext = self.yt.get_video_qualities_with_extension(
+                extracted_info,
+                ext=self.default_video_extension_for_sorting,
+                audio_ext=self.default_audio_extension_for_sorting,
+            )
+            target_audio_format = format_ext.get(audio_format)
+            assert target_audio_format, (
+                f"The desired audio format '{audio_format}' is not supported by the video."
+                f" Try other formats from {audioQualities} or use audio format_id."
+            )
+            audio_format = target_audio_format.format_id
+
         if video_format and audio_format:
             format = f"{video_format}+{audio_format}"
         elif video_format:
             format = f"{video_format}"
         elif audio_format:
             format = f"{audio_format}"
-        else:
+
+        elif default_format:
             format = default_format
+        else:
+            raise Exception(
+                "Atleast one of the following parameters must have a positive value for download "
+                "process to take place : audio_format, video_format and default_format."
+            )
 
         pre_params = {
             "format": format,
@@ -800,8 +824,12 @@ class Download(PostDownload):
         **kwargs,
     ) -> dict:
         """Download `audio only` shortcut for `.ydl_run`. Convert to `mp3` on demand.
-        extracted_info (ExtractedInfo) The extracted information about the video.
-        bitrate (audioBitratesType, Optional): Mp3 conversion bitrate. Set None to retain in its original extension. Defaults to 128k.
+        Args:
+            extracted_info (ExtractedInfo) The extracted information about the video.
+            bitrate (audioBitratesType, Optional): Mp3 conversion bitrate. Set None to retain in its original extension. Defaults to 128k.
+            **kwargs: Additional keyword arguments for `ydl_run`
+        Returns:
+            A dictionary containing the results of the video download and processing.
         """
         kwargs["video_format"] = None
         kwargs.setdefault("audio_format", "bestaudio")
@@ -816,3 +844,54 @@ class Download(PostDownload):
             )
             processed_info["filepath"] = mp3_saved_to.as_posix()
         return processed_info
+
+    def ydl_run_video(
+        self,
+        extracted_info: ExtractedInfo,
+        video_format: t.Union[videoQualitiesType, str] = "bestvideo",
+        output_ext: t.Literal["mkv", "webm", "mp4"] = "mp4",
+        **kwargs,
+    ) -> dict:
+        """
+        Download **videos** shortcut for `ydl_run`,
+
+        Args:
+            extracted_info (ExtractedInfo): The extracted information about the video.
+            video_format (Union[videoQualitiesType, str], optional): The desired video format or quality. Defaults to "bestvideo".
+            output_ext (Literal["mkv", "webm", "mp4"], optional): The desired output file extension. Defaults to "mp4".
+            **kwargs: Additional keyword arguments for `ydl_run`
+
+        Returns:
+            dict: A dictionary containing the results of the video download and processing.
+        """
+        kwargs.setdefault("output_ext", output_ext)
+        return self.ydl_run(
+            extracted_info=extracted_info, video_format=video_format, **kwargs
+        )
+
+    def ydl_run_ids(
+        self, extracted_info: ExtractedInfo, format_ids: t.Iterable, **kwargs
+    ) -> dict:
+        """Download shortcut for `ydl_run` using format_ids only
+
+        Args:
+            extracted_info (ExtractedInfo): The extracted information about the video.
+            format_ids (t.Iterable): Formats ids e.g (139, 340) or (139)
+            **kwargs: Additional keyword arguments for `ydl_run`
+
+        Returns:
+            dict: A dictionary containing the results of the video download and processing.
+        """
+        assert_instance
+        format = f"{'+'.join(map(lambda id: str(id), format_ids))}"
+        return self.ydl_run(
+            extracted_info=extracted_info,
+            video_format=None,
+            audio_format=None,
+            default_format=format,
+            **kwargs,
+        )
+
+
+Download = Downloader
+# for short-term cross-compatibility

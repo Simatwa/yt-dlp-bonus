@@ -3,9 +3,7 @@ from yt_dlp_bonus.models import ExtractedInfo, SearchExtractedInfo
 from yt_dlp_bonus.constants import mediaQualities
 from tests import curdir
 import pytest
-from tests import curdir
-
-video_url = "https://youtu.be/S3wsCRJVUyg?si=ojUwQ5uSiOAVcwEt"
+from tests import curdir, video_url
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """
 A minimal yet handy extended version of yt-dlp with focus on
-providing pydantic support to YoutubeDL.
+providing pydantic support to YoutubeDL extracts.
 
 ## Search Videos
 
@@ -20,10 +20,7 @@ print(search_results)
 ## Download Video
 
 ```python
-import logging
-from yt_dlp_bonus import YoutubeDLBonus, Download
-
-logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
+from yt_dlp_bonus import YoutubeDLBonus, Downloader
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
@@ -31,13 +28,9 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_video_qualities_with_extension(
-    extracted_info=extracted_info
-)
-
-download = Download(yt=yt_bonus)
-download.run(
-    title=extracted_info.title, quality="480p", quality_infoFormat=quality_formats
+downloader = Downloader(yt=yt_bonus)
+downloader.ydl_run(
+    extracted_info, video_format="480p"
 )
 
 ```
@@ -45,10 +38,7 @@ download.run(
 ## Download Audio
 
 ```python
-import logging
-from yt_dlp_bonus import YoutubeDLBonus, Download
-
-logging.basicConfig(format="%(levelname)s - %(message)s", level=logging.INFO)
+from yt_dlp_bonus import YoutubeDLBonus, Downloader
 
 video_url = "https://youtu.be/S3wsCRJVUyg"
 
@@ -56,19 +46,18 @@ yt_bonus = YoutubeDLBonus()
 
 extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
-quality_formats = yt_bonus.get_video_qualities_with_extension(
-    extracted_info=extracted_info
-)
+downloader = Downloader(yt=yt_bonus)
 
-download = Download(yt=yt_bonus)
-download.run(
-    title=extracted_info.title, quality="medium", quality_infoFormat=quality_formats
+downloader.default_audio_extension_for_sorting = "m4a"
+
+downloader.ydl_run(
+    extracted_info, video_format=None, audio_format="medium"
 )
 ```
 """
 
 from importlib import metadata
-from yt_dlp_bonus.main import YoutubeDLBonus, Download, PostDownload
+from yt_dlp_bonus.main import YoutubeDLBonus, Downloader, PostDownload
 
 try:
     __version__ = metadata.version("yt-dlp-bonus")
@@ -78,4 +67,4 @@ except metadata.PackageNotFoundError:
 __author__ = "Smartwa"
 __repo__ = "https://github.com/Simatwa/yt-dlp-bonus"
 
-__all__ = ["YoutubeDLBonus", "Download", "PostDownload"]
+__all__ = ["YoutubeDLBonus", "Downloader", "PostDownload"]
