@@ -30,7 +30,7 @@ extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
 downloader = Downloader(yt=yt_bonus)
 downloader.ydl_run(
-    extracted_info, video_format="480p"
+    extracted_info, video_format="bestvideo"
 )
 
 ```
@@ -48,10 +48,8 @@ extracted_info = yt_bonus.extract_info_and_form_model(url=video_url)
 
 downloader = Downloader(yt=yt_bonus)
 
-downloader.default_audio_extension_for_sorting = "m4a"
-
 downloader.ydl_run(
-    extracted_info, video_format=None, audio_format="medium"
+    extracted_info, video_format=None, audio_format="bestaudio"
 )
 ```
 """
