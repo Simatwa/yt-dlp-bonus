@@ -756,6 +756,7 @@ class Downloader(PostDownload):
         default_format: str = "best",
         output_ext: t.Literal["mkv", "webm", "mp4"] = None,
         progress_hooks: list[t.Callable] = [],
+        ytdl_params: dict = {},
     ) -> dict:
         """
         Run the video download process using yt-dlp with specified formats and options.
@@ -766,6 +767,7 @@ class Downloader(PostDownload):
             default_format (str, Optional) Default format to be used as fallback incase both video_format and audio_format are None. Defaults to "best".
             output_ext (t.Literal["mkv", "webm", "mp4"], Optional): The desired output file extension. Defaults to None (default).
             progress_hooks (list[t.Callable], Optional): Functions that get called on download progress, with a dictionary with the entries. Defaults to [].
+            ytdl_params (dict, Optional): YoutubeDL options. Defaults to {}.
         returns:
             dict: A dictionary containing the result of the download process.
 
@@ -803,14 +805,16 @@ class Downloader(PostDownload):
                 "process to take place : audio_format, video_format and default_format."
             )
 
-        pre_params = {
-            "format": format,
-        }
+        ytdl_params.update(
+            {
+                "format": format,
+            }
+        )
         if output_ext is not None:
-            pre_params["merge_output_format"] = output_ext
+            ytdl_params["merge_output_format"] = output_ext
 
         params = self._get_updated_ytdl_params(
-            pre_params,
+            ytdl_params,
             progress_hooks,
         )
         ytdl = YoutubeDL(params)
@@ -831,18 +835,26 @@ class Downloader(PostDownload):
         Returns:
             A dictionary containing the results of the video download and processing.
         """
+        assert_membership(audioBitrates, bitrate, "bitrate")
         kwargs["video_format"] = None
+        kwargs["output_ext"] = None
         kwargs.setdefault("audio_format", "bestaudio")
 
-        processed_info = self.ydl_run(extracted_info, **kwargs)
         if bitrate:
-            assert_membership(audioBitrates, bitrate, "bitrate")
-            saved_to = Path(processed_info["requested_downloads"][0]["filepath"])
-            root, ext = os.path.splitext(saved_to)
-            mp3_saved_to = self.convert_audio_to_mp3_format(
-                saved_to, root + f"+{bitrate}" + ".mp3", bitrate
+            ytdl_params: dict = kwargs.get("ytdl_params", {})
+            postprocessors: list[dict] = ytdl_params.get("postprocessors", [])
+            postprocessors.append(
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": bitrate[:-1],
+                }
             )
-            processed_info["filepath"] = mp3_saved_to.as_posix()
+            ytdl_params["postprocessors"] = postprocessors
+            kwargs["ytdl_params"] = ytdl_params
+
+        processed_info = self.ydl_run(extracted_info, **kwargs)
+
         return processed_info
 
     def ydl_run_video(
