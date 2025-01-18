@@ -824,7 +824,11 @@ class Downloader(PostDownload):
         )
         ytdl = YoutubeDL(params)
         info_dict = extracted_info.model_dump()
-        return ytdl.process_video_result(info_dict, download=True)
+        processed_info_dict = ytdl.process_video_result(info_dict, download=True)
+        processed_info_dict["filepath"] = processed_info_dict["requested_downloads"][0][
+            "filepath"
+        ]
+        return processed_info_dict
 
     def ydl_run_audio(
         self,
