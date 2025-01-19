@@ -8,7 +8,7 @@ from typing import Optional, Any, Literal
 
 class ExtractedInfoFormatFragments(BaseModel):
     url: str
-    duration: float
+    duration: Optional[float] = None
 
 
 class ExtractedInfoFormat(BaseModel):
@@ -87,7 +87,7 @@ class ExtractedInfo(BaseModel):
     description: str
     channel_id: str
     channel_url: str
-    duration: float
+    duration: Optional[float] = None
     view_count: int
     average_rating: Optional[Any] = None
     age_limit: int
