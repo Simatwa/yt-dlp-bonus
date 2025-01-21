@@ -35,7 +35,6 @@ from yt_dlp_bonus.utils import (
     assert_membership,
     get_size_string,
     run_system_command,
-    compiled_download_url_ip_pattern,
 )
 from yt_dlp_bonus.exceptions import (
     UserInputError,
@@ -307,14 +306,14 @@ class YoutubeDLBonus(YoutubeDL):
     def get_video_qualities_with_extension(
         self,
         extracted_info: ExtractedInfo,
-        ext: videoExtensionsType = "webm",
+        ext: videoExtensionsType = "mp4",
         audio_ext: audioExtensionsType = "webm",
     ) -> qualityExtractedInfoType:
         """Create a map of video qualities and their metadata.
 
         Args:
             extracted_info (ExtractedInfo): Extracted video info (modelled)
-            ext (t.Literal["webm", "mp4"], optional): Video extensions. Defaults to "webm".
+            ext (t.Literal["webm", "mp4"], optional): Video extensions. Defaults to "mp4".
             audio_ext (t.Literal["m4a", "webm", "opus"], optional): Audio extensions. Defaults to "webm".
 
         Returns:
@@ -501,7 +500,7 @@ class Downloader(PostDownload):
     audio_format_ext = ["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"]
     default_ydl_output_format = "%(title)s (%(format_note)s).%(ext)s"
 
-    default_video_extension_for_sorting: videoExtensionsType = "webm"
+    default_video_extension_for_sorting: videoExtensionsType = "mp4"
     default_audio_extension_for_sorting: audioExtensionsType = "webm"
 
     def __init__(
@@ -753,7 +752,9 @@ class Downloader(PostDownload):
             params.get("outtmpl", {}).get("default", "%(title)s [%(id)s].%(ext)s")
             == "%(title)s [%(id)s].%(ext)s"
         ):
-            params["outtmpl"]["default"] = self.default_ydl_output_format
+            params["outtmpl"]["default"] = (
+                self.filename_prefix + self.default_ydl_output_format
+            )
         update["progress_hooks"] = params.get("progress_hooks", []) + progress_hooks
         params.update(update)
         return params

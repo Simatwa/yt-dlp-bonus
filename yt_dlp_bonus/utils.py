@@ -12,9 +12,6 @@ logger = logging.getLogger(__file__)
 compiled_illegal_characters_pattern = re.compile(r"[^\w\-_\.\s()&|]")
 """Used to get rid of illegal characters in a filename"""
 
-compiled_download_url_ip_pattern = re.compile(r"ip=[\w\W][^&]+")
-"""Used for locating ip={ip} in download url"""
-
 
 def assert_instance(obj, inst, name="Value"):
     """Asserts instanceship of an object"""

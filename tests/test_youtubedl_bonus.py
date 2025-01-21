@@ -22,15 +22,6 @@ def test_load_extracted_info_from_json_file(yb: YoutubeDLBonus):
     assert isinstance(resp, ExtractedInfo)
 
 
-def test_download_url_ip_address_update(yb: YoutubeDLBonus):
-    download_ip_addr = "127.0.0.1"
-    yb = YoutubeDLBonus(download_ip=download_ip_addr)
-    extracted_info = extract_info_from_json_file(yb)
-    for format in extracted_info.formats:
-        if format.format_note in mediaQualities:
-            assert "ip=127.0.0.1" in format.url
-
-
 @pytest.mark.parametrize(
     ["extension", "audio_ext"],
     [

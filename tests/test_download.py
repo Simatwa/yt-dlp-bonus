@@ -104,7 +104,7 @@ def test_native_ytdlp_run_audio_download(
     (
         ["144p", "mp4", None],
         ["240p", "webm", "webm"],
-        ["360p", None, "m4a"],
+        ["360p", "mp4", "m4a"],
         ["480p", "mkv", None],
     ),
 )
