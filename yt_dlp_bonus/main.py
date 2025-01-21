@@ -373,7 +373,8 @@ class YoutubeDLBonus(YoutubeDL):
 
         for quality, format in quality_extracted_info.items():
             if quality in videoQualities:
-                format.audio_video_size = format.filesize_approx + filesize_approx
+                if format.filesize_approx > 0:
+                    format.audio_video_size = format.filesize_approx + filesize_approx
             else:
                 format.audio_video_size = format.filesize_approx
             quality_extracted_info[quality] = format
