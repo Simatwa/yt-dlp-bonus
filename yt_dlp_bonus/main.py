@@ -57,6 +57,7 @@ height_quality_map: dict[int | None, videoQualitiesType] = {
     1080: "1080p",
     1350: "1440p",
     2026: "2160p",
+    4320: "4320p",
     None: "medium",
 }
 """Maps the ExtractedInfoFormat.height to the video quality"""
@@ -68,7 +69,7 @@ _height_quality_map.pop(None)
 quality_height_map: dict[videoQualitiesType, int] = dict(
     zip(_height_quality_map.values(), _height_quality_map.keys())
 )
-quality_height_map.update({"2k": 1350, "4k": 2026})
+quality_height_map.update({"2k": 1350, "4k": 2026, "8k": 4320})
 
 """Maps video quality to it's respective video height"""
 
@@ -84,33 +85,20 @@ protocol_informat_map = {
 class YoutubeDLBonus(YoutubeDL):
     """An extension class of YoutubeDL which pydantically models url & search results and manipulate them."""
 
-    def __init__(
-        self, params: dict = {}, auto_init: bool = True, download_ip: str = None
-    ):
+    def __init__(self, params: dict = {}, auto_init: bool = True):
         """`YoutubeDLBonus` Constructor
 
         Args:
             params (dict, optional): YoutubeDL options. Defaults to {}.
             auto_init (optional, bool): Whether to load the default extractors and print header (if verbose).
                             Set to 'no_verbose_header' to not print the header. Defaults to True.
-            download_ip (optional, str): IP address to be used on the media download url parameter. Defaults to None.
         """
         params.setdefault("noplaylist", True)
         super().__init__(params, auto_init)
-        self.download_ip = download_ip
 
     def __enter__(self) -> "YoutubeDLBonus":
         self.save_console_title()
         return self
-
-    def _update_download_url(self, format: ExtractedInfoFormat) -> ExtractedInfoFormat:
-        """Updates ip address in download url"""
-        if self.download_ip:
-            new_url = re.sub(
-                compiled_download_url_ip_pattern, f"ip={self.download_ip}", format.url
-            )
-            format.url = new_url
-        return format
 
     def get_format_quality(
         self, info_format: ExtractedInfoFormat
@@ -155,7 +143,6 @@ class YoutubeDLBonus(YoutubeDL):
         )
         # print(data["protocol"], target_format_protocol)
         for format in extracted_info.formats:
-            format = self._update_download_url(format)
             if filter_best_protocol:
                 if format.protocol == target_format_protocol:
                     # print(target_format_protocol, format.protocol)
@@ -264,6 +251,28 @@ class YoutubeDLBonus(YoutubeDL):
         with open(to_json_path) as fh:
             data = json.load(fh)
         return self.model_extracted_info(data, **kwargs)
+
+    def dump_extracted_info_to_json_file(
+        self,
+        extracted_info: t.Union[ExtractedInfo, SearchExtractedInfo],
+        save_to: t.Union[Path, str],
+        **kwargs,
+    ) -> t.NoReturn:
+        """Save extracted info to a json file.
+
+        Args:
+            extracted_info (t.Union[ExtractedInfo, SearchExtractedInfo]): Video extracted-info or search extracted-info.
+            save_to(t.Union[Path, str]): Path to save contents to.
+            **kwargs: Keyworded args for `json.dump`
+
+        Returns:
+            t.NoReturn
+        """
+        assert_instance(
+            extracted_info, (ExtractedInfo, SearchExtractedInfo), "extracted_info"
+        )
+        with open(save_to, "w") as fh:
+            json.dump(extracted_info.model_dump(), fh, **kwargs)
 
     def separate_videos_by_extension(
         self, extracted_info: ExtractedInfo

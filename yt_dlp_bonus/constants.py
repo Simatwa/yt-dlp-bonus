@@ -17,6 +17,7 @@ videoQualitiesType: t.TypeAlias = t.Literal[
     "1080p",
     "1440p",
     "2160p",
+    "4320p",
     "720p50",
     "1080p50",
     "1440p50",
@@ -36,6 +37,7 @@ videoQualities: tuple[videoQualitiesType] = (
     "1080p",
     "1440p",
     "2160p",
+    "4320p",
     "720p50",
     "1080p50",
     "1440p50",
@@ -44,6 +46,7 @@ videoQualities: tuple[videoQualitiesType] = (
     "1080p60",
     "1440p60",
     "2160p60",
+    "4320p60",
 )
 """Video qualities"""
 
@@ -72,6 +75,7 @@ mediaQualitiesType: t.TypeAlias = t.Literal[
     "1080p",
     "1440p",
     "2160p",
+    "4320p",
     "720p50",
     "1080p50",
     "1440p50",
@@ -80,6 +84,7 @@ mediaQualitiesType: t.TypeAlias = t.Literal[
     "1080p60",
     "1440p60",
     "2160p60",
+    "4320p60",
 ]
 
 mediaQualities: tuple[mediaQualitiesType] = audioQualities + videoQualities
@@ -113,6 +118,7 @@ video_audio_quality_map: dict[videoQualitiesType, audioQualitiesType] = {
     "1080p": "medium",
     "1440p": "medium",
     "2160p": "medium",
+    "4320p": "medium",
     "720p50": "medium",
     "1080p50": "medium",
     "1440p50": "medium",
@@ -121,4 +127,5 @@ video_audio_quality_map: dict[videoQualitiesType, audioQualitiesType] = {
     "1080p60": "medium",
     "1440p60": "medium",
     "2160p60": "medium",
+    "4320p60": "medium",
 }
