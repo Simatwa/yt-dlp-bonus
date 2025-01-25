@@ -499,7 +499,7 @@ class Downloader(PostDownload):
 
     video_output_ext = ["mkv", "webm", "mp4"]
     audio_format_ext = ["aac", "opus", "mp3", "flac", "vorbis", "m4a", "webm"]
-    default_ydl_output_format = "%(title)s (%(id)s,%(format_note)s).%(ext)s"
+    default_ydl_output_format = "%(title)s (%(format_note)s, %(id)s).%(ext)s"
 
     default_video_extension_for_sorting: videoExtensionsType = "mp4"
     default_audio_extension_for_sorting: audioExtensionsType = "webm"
