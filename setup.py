@@ -20,7 +20,7 @@ setup(
         "Documentation": "https://github.com/Simatwa/yt-dlp-bonus/",
     },
     entry_points={
-        "console_scripts": [],
+        "console_scripts": ["yt-dlpb = yt_dlp_bonus.cli:app"],
     },
     install_requires=["yt-dlp>=2024.12.13", "pydantic==2.9.2"],
     python_requires=">=3.10",
