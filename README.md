@@ -94,6 +94,126 @@ downloader.ydl_run(
 
 </details>
 
+## CLI
+
+### Download Video
+
+Usage : `$ yt-dlpb download-video <VIDEO-URL>`
+
+<details>
+
+<summary>
+<code>$ python -m yt_dlp_bonus download-video --help</code>
+</summary>
+
+```
+                                                                                
+ Usage: python -m yt_dlp_bonus download-video [OPTIONS] URL                     
+                                                                                
+ Download a youtube video                                                       
+                                                                                
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    url      TEXT  Link pointing to a Youtube video [default: None]         │
+│                     [required]                                               │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --quality                        [144p|240p|360p|480p  Video quality to      │
+│                                  |720p|1080p|2k|4k|8k  download              │
+│                                  |best]                [default: best]       │
+│ --dir                            DIRECTORY             Directory to save the │
+│                                                        video to              │
+│                                                        [default:             │
+│                                                        /home/smartwa/git/sm… │
+│ --format                         [webm|mp4]            Video format to       │
+│                                                        process ie. mp4 or    │
+│                                                        webm                  │
+│                                                        [default: webm]       │
+│ --quiet            --no-quiet                          Do not stdout         │
+│                                                        anything              │
+│                                                        [default: no-quiet]   │
+│ --subtitle-lang                  TEXT                  Subtitle language to  │
+│                                                        embed in the video    │
+│                                                        [default: None]       │
+│ --help                                                 Show this message and │
+│                                                        exit.                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+```
+
+</details>
+
+### Download Audio
+
+Usage : `$ yt-dlp download-audio <VIDEO-URL>`
+
+<details>
+<summary>
+<code>$ python -m yt_dlp_bonus download-audio --help</code>
+</summary>
+
+```
+                                                                                
+ Usage: python -m yt_dlp_bonus download-audio [OPTIONS] URL                     
+                                                                                
+ Download audio version of a YouTube video                                      
+                                                                                
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    url      TEXT  Link pointing to a Youtube video [default: None]         │
+│                     [required]                                               │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --quality                  [ultralow|low|medium|be  Video quality to         │
+│                            staudio]                 download                 │
+│                                                     [default: bestaudio]     │
+│ --dir                      DIRECTORY                Directory to save the    │
+│                                                     video to                 │
+│                                                     [default:                │
+│                                                     /home/smartwa/git/smart… │
+│ --format                   [webm|mp4]               Video format to process  │
+│                                                     ie. mp4 or webm          │
+│                                                     [default: webm]          │
+│ --bitrate                  [64k|96k|128k|192k|256k  Audio bitrate while      │
+│                            |320k]                   converting to mp3        │
+│                                                     [default: None]          │
+│ --quiet      --no-quiet                             Do not stdout anything   │
+│                                                     [default: no-quiet]      │
+│ --help                                              Show this message and    │
+│                                                     exit.                    │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+```
+
+</details>
+
+<details>
+
+<summary>
+<code>$ python -m yt_dlp_bonus --help</code>
+</summary>
+
+```
+                                                                                
+ Usage: python -m yt_dlp_bonus [OPTIONS] COMMAND [ARGS]...                      
+                                                                                
+ Download Youtube videos in a number of formats.                                
+                                                                                
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.      │
+│ --show-completion             Show completion for the current shell, to copy │
+│                               it or customize the installation.              │
+│ --help                        Show this message and exit.                    │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ download-video   Download a youtube video                                    │
+│ download-audio   Download audio version of a YouTube video                   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+```
+
+</details>
+
 > [!NOTE]
 > Incase requests are detected as coming from bot then consider using a proxy from **Canada**, **USA** or any other location that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
 
