@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="yt-dlp-bonus",
-    version="0.2.4",
+    version="0.2.5",
     license="The Unlicense",
     author="Smartwa",
     maintainer="Smartwa",
@@ -22,7 +22,7 @@ setup(
     entry_points={
         "console_scripts": ["yt-dlpb = yt_dlp_bonus.cli:app"],
     },
-    install_requires=["yt-dlp>=2024.12.13", "pydantic==2.9.2", "typer==0.15.1"],
+    install_requires=["yt-dlp>=2025.7.21", "pydantic>=2.11.7", "typer>=0.16.0"],
     python_requires=">=3.10",
     keywords=[
         "yt-dlp",
