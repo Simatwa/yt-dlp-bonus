@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import shutil
 import warnings
 import typing as t
@@ -222,7 +221,7 @@ class YoutubeDLBonus(YoutubeDL):
         """
         assert (
             self.params.get("noplaylist", True) is True
-        ), f"This function is only useful when playlist searching is disabled. Deactivate it on params 'noplaylist=True'"
+        ), "This function is only useful when playlist searching is disabled. Deactivate it on params 'noplaylist=True'"
         assert limit > 0, f"Results Limit should be greater than 0 not {limit}."
         search_extracted_info = self.extract_info(
             f"ytsearch{limit}:{query}", download=False
@@ -409,7 +408,7 @@ class PostDownload:
             temp_files t.Sequence[Path|str]: temporary files.
         """
         if not self.clear_temps:
-            logger.info(f"Ignoring temp-file clearance.")
+            logger.info("Ignoring temp-file clearance.")
             if self.temp_dir:
                 for temp_file in temp_files:
                     try:
@@ -423,7 +422,7 @@ class PostDownload:
             logger.warning(f"Clearing temporary file - {temp_file}")
             try:
                 os.remove(temp_file)
-            except Exception as e:
+            except Exception:
                 logger.exception(f"Failed to clear temp-file {temp_file}")
 
     def merge_audio_and_video(
@@ -594,7 +593,7 @@ class Downloader(PostDownload):
                     f"range ({get_size_string(min_filesize)} - {get_size_string(max_filesize)})."
                 )
             raise UknownDownloadFailure(
-                f"File of the requested quality could not be downloaded due to unknown reasons. "
+                "File of the requested quality could not be downloaded due to unknown reasons. "
                 "Try downloading other smaller qualities."
             )
 
@@ -673,7 +672,7 @@ class Downloader(PostDownload):
 
             if target_format.ext == "webm" and target_audio_format.ext == "m4a":
                 raise IncompatibleMediaFormats(
-                    f"Cannot merge a video with 'webm' extension and an audio with 'm4a' extension."
+                    "Cannot merge a video with 'webm' extension and an audio with 'm4a' extension."
                 )
             # Video being handled
             save_to = self.save_to(
@@ -848,10 +847,12 @@ class Downloader(PostDownload):
         **kwargs,
     ) -> dict:
         """Download `audio only` shortcut for `.ydl_run`. Convert to `mp3` on demand.
+
         Args:
             extracted_info (ExtractedInfo) The extracted information about the video.
             bitrate (audioBitratesType, Optional): Mp3 conversion bitrate. Set None to retain in its original extension. Defaults to 128k.
             **kwargs: Additional keyword arguments for `ydl_run`
+            
         Returns:
             A dictionary containing the results of the video download and processing.
         """

@@ -215,7 +215,7 @@ Usage : `$ yt-dlp download-audio <VIDEO-URL>`
 </details>
 
 > [!NOTE]
-> Incase requests are detected as coming from bot then consider using a proxy from **Canada**, **USA** or any other location that will work. For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
+> For more information on how to bypass bot detection then consider going through [this Wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors).
 
 # License
 
