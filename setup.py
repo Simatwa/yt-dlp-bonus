@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="yt-dlp-bonus",
-    version="0.2.5",
+    version="0.2.6",
     license="The Unlicense",
     author="Smartwa",
     maintainer="Smartwa",
@@ -41,5 +41,6 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14"
     ],
 )
