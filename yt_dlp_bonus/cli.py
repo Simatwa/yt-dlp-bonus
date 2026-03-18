@@ -118,7 +118,7 @@ def download_video(
     format = (
         "bestvideo+bestaudio"
         if format == "best"
-        else f"{target_format.format_id}+{qualities_videoFormat["medium"].format_id}"
+        else f"{target_format.format_id}+{qualities_videoFormat['medium'].format_id}"
     )
     download_resp = downloader.ydl_run(
         extracted_info,

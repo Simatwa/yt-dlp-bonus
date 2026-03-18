@@ -219,9 +219,9 @@ class YoutubeDLBonus(YoutubeDL):
         Returns:
             SearcheExtractedInfo: Modelled search results
         """
-        assert (
-            self.params.get("noplaylist", True) is True
-        ), "This function is only useful when playlist searching is disabled. Deactivate it on params 'noplaylist=True'"
+        assert self.params.get("noplaylist", True) is True, (
+            "This function is only useful when playlist searching is disabled. Deactivate it on params 'noplaylist=True'"
+        )
         assert limit > 0, f"Results Limit should be greater than 0 not {limit}."
         search_extracted_info = self.extract_info(
             f"ytsearch{limit}:{query}", download=False
@@ -384,9 +384,24 @@ class YoutubeDLBonus(YoutubeDL):
 class PostDownload:
     """Provides post download utilities"""
 
-    merge_audio_and_video_command_template = 'ffmpeg -i "%(video_path)s" -i "%(audio_path)s" -c copy "%(output)s" -y -threads auto'
+    merge_audio_and_video_command_template = (
+        "ffmpeg -nostats -loglevel error "
+        '-i "%(video_path)s" '
+        '-i "%(audio_path)s" '
+        "-c copy "
+        "-movflags +faststart "
+        "-avoid_negative_ts make_zero "
+        "-fflags +genpts "
+        '-y "%(output)s"'
+    )
+
     audio_to_mp3_conversion_command_template = (
-        'ffmpeg -i "%(input)s" -b:a %(bitrate)s "%(output)s" -y -threads auto'
+        "ffmpeg -nostats -loglevel error "
+        '-i "%(input)s" '
+        "-c:a libmp3lame "
+        "-b:a %(bitrate)s "
+        "-compression_level 0 "
+        '-y "%(output)s"'
     )
 
     def __init__(self, clear_temps: bool = False):
@@ -440,15 +455,15 @@ class PostDownload:
 
         ## Requires `ffmpeg` installed in system.
         """
-        assert (
-            audio_path.is_file()
-        ), f"Audio file does not exists in path - {audio_path} "
-        assert (
-            video_path.is_file()
-        ), f"Video file does not exists in path - {video_path}"
-        assert not Path(
-            str(output)
-        ).is_dir(), f"Output path cannot be a directory - {output}"
+        assert audio_path.is_file(), (
+            f"Audio file does not exists in path - {audio_path} "
+        )
+        assert video_path.is_file(), (
+            f"Video file does not exists in path - {video_path}"
+        )
+        assert not Path(str(output)).is_dir(), (
+            f"Output path cannot be a directory - {output}"
+        )
         command = self.merge_audio_and_video_command_template % (
             dict(video_path=video_path, audio_path=audio_path, output=output)
         )
@@ -478,9 +493,9 @@ class PostDownload:
             Path: The clip path.
         """
         assert input.is_file(), f"Invalid value for input file - {input}"
-        assert not Path(
-            str(output)
-        ).is_dir(), f"Output path cannot be a directory - {output}"
+        assert not Path(str(output)).is_dir(), (
+            f"Output path cannot be a directory - {output}"
+        )
         assert_membership(audioBitrates, bitrate)
         command = self.audio_to_mp3_conversion_command_template % dict(
             input=input, bitrate=bitrate, output=output
@@ -540,9 +555,9 @@ class Downloader(PostDownload):
         self.audio_quality = audio_quality
         self.default_audio_quality = default_audio_quality
         self.default_video_quality = default_video_quality
-        assert (
-            self.working_directory.is_dir()
-        ), f"Working directory chosen is invalid - {self.working_directory}"
+        assert self.working_directory.is_dir(), (
+            f"Working directory chosen is invalid - {self.working_directory}"
+        )
         self.temp_dir = self.working_directory.joinpath("temps")
         os.makedirs(self.temp_dir, exist_ok=True)
 
@@ -656,9 +671,9 @@ class Downloader(PostDownload):
                 quality = self.default_video_quality
             else:
                 assert_membership(videoQualities, quality, "Video quality")
-            assert (
-                quality in qualities_format
-            ), f"The video does not support the targeted video quality - {quality}"
+            assert quality in qualities_format, (
+                f"The video does not support the targeted video quality - {quality}"
+            )
             target_format = self.assert_is_downloadable(qualities_format[quality])
             target_audio_format = self.assert_is_downloadable(
                 qualities_format[
@@ -712,9 +727,9 @@ class Downloader(PostDownload):
                 quality = self.default_audio_quality
             else:
                 assert_membership(audioQualities, quality, "Audio quality")
-            assert (
-                quality in qualities_format
-            ), f"The video does not support the targeted audio quality - {quality}"
+            assert quality in qualities_format, (
+                f"The video does not support the targeted audio quality - {quality}"
+            )
             target_format = self.assert_is_downloadable(qualities_format[quality])
             title = f"{title} {bitrate}" if bitrate else title
             save_to = self.save_to(title, ext="mp3" if bitrate else target_format.ext)
@@ -852,7 +867,7 @@ class Downloader(PostDownload):
             extracted_info (ExtractedInfo) The extracted information about the video.
             bitrate (audioBitratesType, Optional): Mp3 conversion bitrate. Set None to retain in its original extension. Defaults to 128k.
             **kwargs: Additional keyword arguments for `ydl_run`
-            
+
         Returns:
             A dictionary containing the results of the video download and processing.
         """
