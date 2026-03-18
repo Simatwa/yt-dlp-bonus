@@ -105,7 +105,7 @@ class ExtractedInfo(BaseModel):
     heatmap: Optional[list[ExtractedInfoHeatmap]] = None
     like_count: Optional[int] = None
     channel: str = Field(description="Channel name")
-    channel_follower_count: int
+    channel_follower_count: int | None = None
     channel_is_verified: bool = False
     uploader: str
     uploader_id: Optional[str] = None
